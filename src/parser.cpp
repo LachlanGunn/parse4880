@@ -9,6 +9,115 @@
 
 namespace parse4880 {
 
+namespace {
+
+enum PacketLengthType {
+  kNormalPacket = 0,
+  kPartialPacket,
+  kIndeterminatePacket
+};
+
+struct find_length_result {
+  int64_t          length;
+  int              length_field_length;
+  PacketLengthType length_type;
+};
+
+/**
+ * Find the length of a new-style packet chunk.
+ *
+ * A new-style packet encodes its length type in the first octet rather
+ * than in the header.  We check the first octet to see what kind of
+ * length record we have---one-octet, two-octet, five-octet, or a partial
+ * record---then decode and return it.
+ *
+ * TODO: Deal with partial-length records.
+ */
+struct find_length_result find_length_new(const std::string& data,
+                                          int field_position,
+                                          bool allow_partial) {
+  struct find_length_result result;
+
+  // Now we have to get the length.  This is a bit tricky.
+  // When we first checked the length, we made sure that the first
+  // octet was available---this tells us how long the total length is.
+  result.length = data[field_position];
+  result.length_field_length = 1;
+
+  // If the packet length is less than 192, then it is equal to the first
+  // octet and we are done.
+
+  // If the first octet is from 192 to 223, then we have a two-octet length.
+  if (result.length > 191 && result.length < 224) {
+    // Check that the buffer is large enough
+    if (data.length() <= field_position + 1) {
+      throw invalid_header_error(field_position);
+    }
+    // The two-octet length is defined in RFC4880§4.2.2.2
+    result.length =
+        ( (data[field_position    ] - 192 ) << 8)
+        +  data[field_position + 1]
+        + 192;
+    result.length_field_length = 2;
+  }
+  // If the first octet is from 224 to 254, then we have a partial length
+  // header.
+  else if (result.length >= 224 && result.length < 255) {
+    // TODO: Deal with these.
+    throw unsupported_feature_error(field_position,
+                                    "partial body lengths");
+  }
+  // If the first octet is 255, then we have a five-octet length.
+  else if (result.length == 255) {
+    // Check that the buffer is large enough
+    if (data.length() <= field_position + 6) {
+      throw invalid_header_error(field_position);
+    }
+    // The five-octet length is defined in RFC4880§4.2.2.3
+    result.length =
+        (data[field_position + 1] << 24)
+        + (data[field_position + 2] << 16)
+        + (data[field_position + 3] << 8)
+        +  data[field_position + 4];
+    result.length_field_length = 5;
+  }
+  
+  return result;
+}
+
+/**
+ * Find the length of a old-style packet chunk.
+ *
+ * An old-style packet encodes its length type in the header
+ * than in the header.
+ */
+struct find_length_result find_length_old(const std::string& data,
+                                          int field_position,
+                                          int length_type) {
+  struct find_length_result result;
+
+  if (length_type == 3) {
+    result.length = data.length() - field_position;
+    result.length_field_length = 0;
+  }
+  else {
+    result.length_field_length = 1 << length_type ;
+    // Check that the buffer is large enough
+    if (data.length() <= field_position + result.length_field_length) {
+      throw invalid_header_error(field_position);
+    }
+    for (int i = 0; i < result.length_field_length; i++) {
+      result.length += data[field_position+i]
+          << (8*(result.length_field_length-i-1));
+    }
+  }  
+  
+  return result;
+}
+
+
+}
+
 std::list<std::shared_ptr<PGPPacket>> parse(std::string data) {
   std::list<std::shared_ptr<PGPPacket>> parsed_packets;
       
@@ -46,69 +155,22 @@ std::list<std::shared_ptr<PGPPacket>> parse(std::string data) {
     if (0x40 != (header & 0x40)) {
       packet_tag = (header & 0x3C) >> 2;
       uint8_t length_type = header & 0x03;
-      if (length_type == 3) {
-        packet_length = data.length() - packet_start_position - 1;
-        packet_length_length = 0;
-      }
-      else {
-        packet_length_length = 1 << length_type ;
-        // Check that the buffer is large enough
-        if (data.length() <= packet_start_position + packet_length_length) {
-          throw invalid_header_error(packet_start_position);
-        }
-        for (int i = 0; i < packet_length_length; i++) {
-          packet_length += data[packet_start_position+i+1]
-              << (8*(packet_length_length-i-1));
-        }
-      }
+
+      struct find_length_result length
+          = find_length_old(data, packet_start_position+1, length_type);
+
+      packet_length = length.length;
+      packet_length_length = length.length_field_length;
     }
     else {
       // First, we  extract the packet tag in bits [5:0]
       packet_tag = header & 0x3F;
 
-      // Now we have to get the length.  This is a bit tricky.
-      // When we first checked the length, we made sure that the first
-      // octet was available---this tells us how long the total length is.
-      packet_length = data[packet_start_position+1];
-      packet_length_length = 1;
+      struct find_length_result length
+          = find_length_new(data, packet_start_position+1, true);
 
-      // If the packet length is less than 192, then it is equal to the first
-      // octet and we are done.
-
-      // If the first octet is from 192 to 223, then we have a two-octet length.
-      if (packet_length > 191 && packet_length < 224) {
-        // Check that the buffer is large enough
-        if (data.length() <= packet_start_position + 3) {
-          throw invalid_header_error(packet_start_position);
-        }
-        // The two-octet length is defined in RFC4880§4.2.2.2
-        packet_length =
-            ( (data[packet_start_position + 1] - 192 ) << 8)
-            +  data[packet_start_position + 2]
-            + 192;
-        packet_length_length = 2;
-      }
-      // If the first octet is from 224 to 254, then we have a partial length
-      // header.
-      else if (packet_length >= 224 && packet_length < 255) {
-        // TODO: Deal with these.
-        throw unsupported_feature_error(packet_start_position,
-                                        "partial body lengths");
-      }
-      // If the first octet is 255, then we have a five-octet length.
-      else if (packet_length == 255) {
-        // Check that the buffer is large enough
-        if (data.length() <= packet_start_position + 6) {
-          throw invalid_header_error(packet_start_position);
-        }
-        // The five-octet length is defined in RFC4880§4.2.2.3
-        packet_length =
-            (data[packet_start_position + 2] << 24)
-            + (data[packet_start_position + 3] << 16)
-            + (data[packet_start_position + 4] << 8)
-            +  data[packet_start_position + 5];
-        packet_length_length = 5;
-      }
+      packet_length = length.length;
+      packet_length_length = length.length_field_length;
     }
       
     // Now that we know how long the packet should be, we can check that we
