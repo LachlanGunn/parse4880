@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <cstdio>
 
+#include <string>
 #include <memory>
 #include <stdexcept>
 
@@ -33,24 +34,32 @@ struct find_length_result {
  *
  * TODO: Deal with partial-length records.
  */
-struct find_length_result find_length_new(const std::string& data,
+struct find_length_result find_length_new(const std::string& string_data,
                                           int field_position,
                                           bool allow_partial) {
   struct find_length_result result;
+  const unsigned char* data =
+      reinterpret_cast<const unsigned char*>(string_data.c_str());
 
   // Now we have to get the length.  This is a bit tricky.
   // When we first checked the length, we made sure that the first
   // octet was available---this tells us how long the total length is.
-  result.length = data[field_position];
+  result.length = (unsigned char)data[field_position];
   result.length_field_length = 1;
 
   // If the packet length is less than 192, then it is equal to the first
   // octet and we are done.
-
+  if (result.length < 192) {
+    // Do nothing.
+  }
   // If the first octet is from 192 to 223, then we have a two-octet length.
-  if (result.length > 191 && result.length < 224) {
+  // But if we don't allow partial packets (as in signature subpackets), then
+  // this can go up to 254.
+  else if (result.length > 191 &&
+           ( ( allow_partial && result.length < 224) ||
+             (!allow_partial && result.length < 255)) ) {
     // Check that the buffer is large enough
-    if (data.length() <= field_position + 1) {
+    if (string_data.length() <= field_position + 1) {
       throw invalid_header_error(field_position);
     }
     // The two-octet length is defined in RFC4880§4.2.2.2
@@ -62,15 +71,15 @@ struct find_length_result find_length_new(const std::string& data,
   }
   // If the first octet is from 224 to 254, then we have a partial length
   // header.
-  else if (result.length >= 224 && result.length < 255) {
+  else if (allow_partial && (result.length >= 224 && result.length < 255)) {
     // TODO: Deal with these.
     throw unsupported_feature_error(field_position,
                                     "partial body lengths");
   }
   // If the first octet is 255, then we have a five-octet length.
-  else if (result.length == 255) {
+  else {
     // Check that the buffer is large enough
-    if (data.length() <= field_position + 6) {
+    if (string_data.length() < field_position + 6) {
       throw invalid_header_error(field_position);
     }
     // The five-octet length is defined in RFC4880§4.2.2.3
@@ -106,11 +115,13 @@ struct find_length_result find_length_old(const std::string& data,
     if (data.length() <= field_position + result.length_field_length) {
       throw invalid_header_error(field_position);
     }
+
+    result.length = 0;
     for (int i = 0; i < result.length_field_length; i++) {
       result.length += data[field_position+i]
           << (8*(result.length_field_length-i-1));
     }
-  }  
+  }
   
   return result;
 }
@@ -166,6 +177,7 @@ std::list<std::shared_ptr<PGPPacket>> parse(std::string data) {
       // First, we  extract the packet tag in bits [5:0]
       packet_tag = header & 0x3F;
 
+      // Next, we get the length.
       struct find_length_result length
           = find_length_new(data, packet_start_position+1, true);
 
@@ -187,14 +199,45 @@ std::list<std::shared_ptr<PGPPacket>> parse(std::string data) {
     }
     // Finally, we can create the packet.
     parsed_packets.push_back(
-        std::shared_ptr<PGPPacket>(
-            new PGPPacket(packet_tag, data.substr(
-                packet_start_position + packet_length_length, packet_length))));
+        PGPPacket::ParsePacket(packet_tag, data.substr(
+            packet_start_position + packet_length_length + 1, packet_length)));
 
     packet_start_position += packet_length_with_overhead;
   }
 
   return parsed_packets;
+}
+
+std::list<std::shared_ptr<PGPPacket>> parse_subpackets(std::string data) {
+  std::list<std::shared_ptr<PGPPacket>> subpackets;
+  for (int64_t packet_start_position = 0; packet_start_position < data.length();) {
+    struct find_length_result packet_length_result =
+        find_length_new(data, packet_start_position, false);
+
+    int64_t packet_length_with_overhead =
+          packet_length_result.length_field_length
+        + packet_length_result.length;
+
+    if (data.length() < packet_start_position + packet_length_with_overhead
+        || packet_length_result.length == 0) {
+      throw packet_length_error(-1,
+                                packet_length_with_overhead,
+                                data.length() - packet_start_position); 
+    }
+
+    uint8_t packet_tag =
+        data[packet_start_position + packet_length_result.length_field_length];
+
+    subpackets.push_back(std::shared_ptr<PGPPacket>(new UnknownPGPPacket(
+        packet_tag,
+        data.substr(packet_start_position
+                    + packet_length_result.length_field_length
+                    + 1,
+                    packet_length_result.length - 1))));
+    packet_start_position += packet_length_with_overhead;
+  }
+
+  return subpackets;
 }
 
 }

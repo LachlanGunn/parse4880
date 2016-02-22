@@ -45,6 +45,13 @@ class unsupported_feature_error : public format_error {
   std::string feature_;
 };
 
+class invalid_packet_error : public format_error {
+public:
+  invalid_packet_error(std::string problem);
+private:
+  std::string problem_;
+};
+
 }
 
 #endif  // PARSE4880_INCLUDE_EXCEPTIONS_H_

@@ -41,4 +41,7 @@ unsupported_feature_error::unsupported_feature_error(
     : format_error(position, (format("%1% not supported") % feature).str()),
       feature_(feature) {}
 
+invalid_packet_error::invalid_packet_error(std::string problem)
+    : format_error(-1, problem) {}
+
 }
