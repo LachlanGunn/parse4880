@@ -84,7 +84,7 @@ struct find_length_result find_length_new(const std::string& string_data,
     }
     // The five-octet length is defined in RFC4880§4.2.2.3
     result.length =
-        (data[field_position + 1] << 24)
+          (data[field_position + 1] << 24)
         + (data[field_position + 2] << 16)
         + (data[field_position + 3] << 8)
         +  data[field_position + 4];
@@ -116,18 +116,48 @@ struct find_length_result find_length_old(const std::string& data,
       throw invalid_header_error(field_position);
     }
 
-    result.length = 0;
-    for (int i = 0; i < result.length_field_length; i++) {
-      result.length += data[field_position+i]
-          << (8*(result.length_field_length-i-1));
-    }
+    result.length = ReadInteger(data.substr(field_position,
+                                            result.length_field_length));
   }
   
   return result;
 }
 
-
 }
+
+/**
+ * Parse an OpenPGP-style small (as opposed to multiprecision) integer.
+ *
+ * @param   encoded_integer    An string to be converted to an integer.
+ *
+ * @return  The decoded integer value.
+ */
+int64_t ReadInteger(std::string encoded_integer) {
+  int64_t parsed_integer = 0;
+  for (int i = 0; i < encoded_integer.length(); i++) {
+    parsed_integer +=
+        encoded_integer[i] << ( 8*(encoded_integer.length() - i - 1) );
+  }
+  return parsed_integer;
+}
+
+/**
+ * Encode an OpenPGP-style small (as opposed to multiprecision) integer.
+ *
+ * @param   encoded_integer    An string to be converted to an integer.
+ *
+ * @return  The decoded integer value.
+ */
+std::string WriteInteger(int64_t value, uint8_t length) {
+  std::string result((size_t)length, ' ');
+  for (int i = length-1; i >= 0; i--) {
+    std::fprintf(stderr, "WriteInteger: %d\n", i);
+    result[i] = value & 0xFF;
+    value >>= 8;
+  }
+  return result;
+}
+
 
 std::list<std::shared_ptr<PGPPacket>> parse(std::string data) {
   std::list<std::shared_ptr<PGPPacket>> parsed_packets;
