@@ -136,7 +136,8 @@ int64_t ReadInteger(std::string encoded_integer) {
   int64_t parsed_integer = 0;
   for (int i = 0; i < encoded_integer.length(); i++) {
     parsed_integer +=
-        encoded_integer[i] << ( 8*(encoded_integer.length() - i - 1) );
+        (uint8_t)(encoded_integer[i])
+        << ( 8*(encoded_integer.length() - i - 1) );
   }
   return parsed_integer;
 }

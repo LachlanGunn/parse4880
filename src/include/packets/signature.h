@@ -22,8 +22,9 @@ class SignaturePacket : public PGPPacket {
   uint8_t hash_algorithm() const;
   const std::string& hashed_subpacket_data() const;
   const std::string& unhashed_subpacket_data() const;
-  uint16_t hash_left_16bits() const;
+  const uint8_t* hash_left_16bits() const;
   const std::string& signature() const;
+  const std::string& hashed_data() const;
 
  private:
   void SetSignaturePropertiesFromSubpackets();
@@ -36,8 +37,9 @@ class SignaturePacket : public PGPPacket {
   uint8_t hash_algorithm_;
   std::string hashed_subpacket_data_;
   std::string unhashed_subpacket_data_;
-  uint16_t hash_left_16bits_;
+  uint8_t hash_left_16bits_[2];
   std::string signature_;
+  std::string hashed_data_;
 };
 
 }

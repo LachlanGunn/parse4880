@@ -53,9 +53,9 @@ PublicKeyPacket::PublicKeyPacket(const std::string& data)
     throw invalid_header_error(-1);
   }
 
-  creation_time_ = ReadInteger(data.substr(2,4));
-  public_key_algorithm_ = data[6];
-  key_material_ = data.substr(7);
+  creation_time_ = ReadInteger(data.substr(1,4));
+  public_key_algorithm_ = data[5];
+  key_material_ = data.substr(6);
 
   CryptoPP::SHA1 sha1;
   sha1.Update(reinterpret_cast<const unsigned char*>("\x99"), 1);
@@ -82,6 +82,10 @@ std::string PublicKeyPacket::str() const {
              static_cast<unsigned char>(fingerprint_[i]));
   }
   return (boost::format("Public key: %s") % key_id).str();
+}
+
+const std::string& PublicKeyPacket::key_material() const {
+  return key_material_;
 }
 
 PublicSubkeyPacket::PublicSubkeyPacket(std::string contents)

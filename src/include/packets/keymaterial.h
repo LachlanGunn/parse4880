@@ -26,8 +26,6 @@ class PublicKeyPacket : public KeyMaterialPacket {
   virtual std::string str() const;
 
   const std::string& fingerprint() const;
-
- protected:
   const std::string& key_material() const;
 
  protected:

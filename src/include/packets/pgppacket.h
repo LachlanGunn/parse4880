@@ -7,7 +7,7 @@ class PGPPacket {
  public:
   PGPPacket(std::string contents);
 
-  const std::list<std::shared_ptr<PGPPacket>>& subpackets();
+  const std::list<std::shared_ptr<PGPPacket>>& subpackets() const;
 
   virtual uint8_t tag() const = 0;
   virtual std::string str() const = 0;

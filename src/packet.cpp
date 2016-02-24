@@ -36,7 +36,7 @@ std::shared_ptr<PGPPacket> PGPPacket::ParsePacket(uint8_t tag,
   }
 }
 
-const std::list<std::shared_ptr<PGPPacket>>& PGPPacket::subpackets() {
+const std::list<std::shared_ptr<PGPPacket>>& PGPPacket::subpackets() const {
   return subpackets_;
 }
 

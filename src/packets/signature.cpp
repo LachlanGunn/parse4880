@@ -90,6 +90,8 @@ SignaturePacket::SignaturePacket(std::string packet_data)
     hashed_subpacket_data_ = packet_data.substr(6, hashed_data_count);
     subpackets_ = parse_subpackets(hashed_subpacket_data_);
 
+    hashed_data_ = packet_data.substr(0, 6+hashed_data_count);
+
     int32_t unhashed_data_count =
         ReadInteger(packet_data.substr(6+hashed_data_count, 2));
 
@@ -157,7 +159,7 @@ const std::string& SignaturePacket::unhashed_subpacket_data() const {
   return unhashed_subpacket_data_;
 }
 
-uint16_t SignaturePacket::hash_left_16bits() const {
+const uint8_t* SignaturePacket::hash_left_16bits() const {
   return hash_left_16bits_;
 }
 
@@ -187,6 +189,10 @@ void SignaturePacket::SetSignaturePropertiesFromSubpackets() {
       key_id_ = subpacket_key_id;
     }
   }
+}
+
+const std::string& SignaturePacket::hashed_data() const {
+  return hashed_data_;
 }
 
 }
