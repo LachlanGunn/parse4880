@@ -12,8 +12,7 @@
 
 namespace parse4880 {
 
-// Do nothing, we just want to make it private.
-PGPPacket::PGPPacket() {
+PGPPacket::PGPPacket(std::string contents) : contents_(contents) {
 }
 
 std::shared_ptr<PGPPacket> PGPPacket::ParsePacket(uint8_t tag,
@@ -40,5 +39,10 @@ std::shared_ptr<PGPPacket> PGPPacket::ParsePacket(uint8_t tag,
 const std::list<std::shared_ptr<PGPPacket>>& PGPPacket::subpackets() {
   return subpackets_;
 }
+
+const std::string& PGPPacket::contents() const {
+  return contents_;
+}
+
 
 }

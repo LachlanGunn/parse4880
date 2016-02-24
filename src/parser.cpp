@@ -151,7 +151,6 @@ int64_t ReadInteger(std::string encoded_integer) {
 std::string WriteInteger(int64_t value, uint8_t length) {
   std::string result((size_t)length, ' ');
   for (int i = length-1; i >= 0; i--) {
-    std::fprintf(stderr, "WriteInteger: %d\n", i);
     result[i] = value & 0xFF;
     value >>= 8;
   }

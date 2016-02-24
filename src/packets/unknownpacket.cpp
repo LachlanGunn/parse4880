@@ -11,7 +11,7 @@
 namespace parse4880 {
 
 UnknownPGPPacket::UnknownPGPPacket(uint8_t tag, std::string contents)
-    : tag_(tag), contents_(contents) {}
+    : PGPPacket(contents), tag_(tag) {}
 
 uint8_t UnknownPGPPacket::tag() const {
   return tag_;
@@ -19,10 +19,6 @@ uint8_t UnknownPGPPacket::tag() const {
 
 std::string UnknownPGPPacket::str() const {
   return (boost::format("Type %1%") % static_cast<int>(tag_)).str();
-}
-
-const std::string& UnknownPGPPacket::contents() {
-  return contents_;
 }
 
 }

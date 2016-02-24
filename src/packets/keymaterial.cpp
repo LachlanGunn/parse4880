@@ -14,6 +14,10 @@
 
 namespace parse4880 {
 
+KeyMaterialPacket::KeyMaterialPacket(std::string content)
+    : PGPPacket(content) {
+}
+
 uint8_t KeyMaterialPacket::version() const {
   return version_;
 }
@@ -26,7 +30,8 @@ uint8_t KeyMaterialPacket::public_key_algorithm() const {
   return public_key_algorithm_;
 }
 
-PublicKeyPacket::PublicKeyPacket(const std::string& data) {
+PublicKeyPacket::PublicKeyPacket(const std::string& data)
+    : KeyMaterialPacket(data) {
   /*
    * A public key packet contains the following:
    *

@@ -10,6 +10,9 @@ class KeyMaterialPacket : public PGPPacket {
   uint8_t  public_key_algorithm() const;
 
  protected:
+  KeyMaterialPacket(std::string content);
+
+ protected:
   uint8_t version_;
   int64_t creation_time_;
   uint8_t public_key_algorithm_;

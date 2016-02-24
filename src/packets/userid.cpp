@@ -4,7 +4,8 @@
 
 namespace parse4880 {
 
-UserIDPacket::UserIDPacket(std::string contents) {
+UserIDPacket::UserIDPacket(std::string contents)
+    : PGPPacket(contents) {
   user_id_ = contents;
 }
 

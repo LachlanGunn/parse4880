@@ -9,7 +9,8 @@
 
 namespace parse4880 {
 
-SignaturePacket::SignaturePacket(std::string packet_data) {
+SignaturePacket::SignaturePacket(std::string packet_data)
+    : PGPPacket(packet_data) {
   // We need to parse a signature subpacket.  This could be either
   // a v3 or v4 signature, so we need to check first and switch on that.
   if (packet_data.length() < 1) {

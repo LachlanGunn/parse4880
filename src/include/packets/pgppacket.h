@@ -5,16 +5,20 @@ namespace parse4880 {
 
 class PGPPacket {
  public:
+  PGPPacket(std::string contents);
+
   const std::list<std::shared_ptr<PGPPacket>>& subpackets();
 
   virtual uint8_t tag() const = 0;
   virtual std::string str() const = 0;
 
+  const std::string& contents() const;
+
  protected:
-  PGPPacket();
 
  protected:
   std::list<std::shared_ptr<PGPPacket>> subpackets_;
+  std::string contents_;
 
  public:
   static std::shared_ptr<PGPPacket> ParsePacket(uint8_t tag,

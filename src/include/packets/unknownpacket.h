@@ -9,11 +9,9 @@ class UnknownPGPPacket : public PGPPacket {
   
   virtual uint8_t tag() const;
   virtual std::string str() const;
-  const std::string& contents();
 
  protected:
   uint8_t tag_;
-  std::string contents_;
 };
 
 }
