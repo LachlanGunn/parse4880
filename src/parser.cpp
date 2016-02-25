@@ -79,7 +79,7 @@ struct find_length_result find_length_new(const std::string& string_data,
   // If the first octet is 255, then we have a five-octet length.
   else {
     // Check that the buffer is large enough
-    if (string_data.length() < field_position + 6) {
+    if (string_data.length() < field_position + 5) {
       throw invalid_header_error(field_position);
     }
     // The five-octet length is defined in RFC4880§4.2.2.3

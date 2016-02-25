@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
   }
 
   CryptoPP::RSAFunction pk = ReadRSAPublicKey(pk_packet->key_material());
-  //CryptoPP::RSASS<CryptoPP::PKCS1v15, CryptoPP::SHA1>::Verifier verifier;
+  CryptoPP::RSASS<CryptoPP::PKCS1v15, CryptoPP::SHA1>::Verifier verifier(pk);
   printf("Bits: %d\n", pk.GetModulus().BitCount());
 
   CryptoPP::NonblockingRng rng;
@@ -100,23 +100,50 @@ int main(int argc, char** argv) {
     if (nullptr == signature_ptr) {
       continue;
     }
-    CryptoPP::SHA1 sha1;
+
+    CryptoPP::PK_MessageAccumulator* acc
+        = verifier.NewVerificationAccumulator();
+    //std::unique_ptr<CryptoPP::SHA1> acc(new CryptoPP::SHA1);
+    std::string message = to_verify;
+
     const std::string& signature_hashed = signature_ptr->hashed_data();
-    sha1.Update(reinterpret_cast<const unsigned char*>(to_verify.c_str()),
+    acc->Update(reinterpret_cast<const unsigned char*>(to_verify.c_str()),
                 to_verify.length());
-    sha1.Update(reinterpret_cast<const unsigned char*>(
+    acc->Update(reinterpret_cast<const unsigned char*>(
         signature_hashed.c_str()),
                 signature_hashed.length());
+    message += signature_hashed;
 
     uint8_t trailer[2] = {0x04, 0xFF};
-    sha1.Update(trailer, 2);
+    acc->Update(trailer, 2);
+    message += std::string(reinterpret_cast<const char*>(trailer), 2);
 
-    sha1.Update(reinterpret_cast<const unsigned char*>(
+    acc->Update(reinterpret_cast<const unsigned char*>(
         parse4880::WriteInteger(signature_hashed.length(), 4).c_str()), 4);
+    message += parse4880::WriteInteger(signature_hashed.length(), 4);
+    //acc->Update(reinterpret_cast<const uint8_t*>(message.c_str()), message.length());
+    //unsigned char digest[CryptoPP::SHA1::DIGESTSIZE];
+    //acc->Final(digest);
+    //printf("%02x %02x\n", digest[0], digest[1]);
 
-    unsigned char digest[CryptoPP::SHA1::DIGESTSIZE];
-    sha1.Final(digest);
-    printf("%02x %02x\n", digest[0], digest[1]);
+    CryptoPP::Integer signature_int;
+    signature_int.OpenPGPDecode(reinterpret_cast<const uint8_t*>(
+        signature_ptr->signature().c_str()),
+                                signature_ptr->signature().length());
+
+    CryptoPP::Integer recovered_digest
+        = pk.ApplyFunction(signature_int);
+    std::cout << "Recovered: " << std::hex <<  recovered_digest << std::endl;
+
+    verifier.InputSignature(*acc,
+                            reinterpret_cast<const uint8_t*>(
+                                signature_ptr->signature().substr(2).c_str()),
+                            signature_ptr->signature().length()-2);
+
+    //uint8_t expected[2] = {0x89, 0x13};
+    //printf("Verification: %d\n", acc->TruncatedVerify(expected, 2));
+    printf("Verification: %d\n", verifier.Verify(acc));
+    printf("Upfront: %d\n", verifier.SignatureUpfront());
   }
   
   return 0;
