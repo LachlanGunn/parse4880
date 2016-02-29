@@ -64,7 +64,7 @@ PublicKeyPacket::PublicKeyPacket(const std::string& data)
   sha1.Update(reinterpret_cast<const unsigned char*>(data.c_str()),
               data.length());
 
-  char digest[CryptoPP::SHA1::DIGESTSIZE];
+  char digest[CryptoPP::SHA1::DIGESTSIZE]; // Flawfinder: ignore (known length)
   memset(digest, '\0', CryptoPP::SHA1::DIGESTSIZE);
   sha1.Final(reinterpret_cast<unsigned char*>(digest));
 
@@ -76,7 +76,7 @@ uint8_t PublicKeyPacket::tag() const {
 }
 
 std::string PublicKeyPacket::str() const {
-  char key_id[41];
+  char key_id[41]; // Flawfinder: ignore (fingerprints have known length)
   for(int i = 0; i < 20; i+=1) {
     snprintf(key_id+i*2, 3, "%02X",
              static_cast<unsigned char>(fingerprint_[i]));
@@ -96,7 +96,7 @@ uint8_t PublicSubkeyPacket::tag() const {
 }
 
 std::string PublicSubkeyPacket::str() const {
-  char key_id[41];
+  char key_id[41]; // Flawfinder: ignore (fingerprints have known length)
   for(int i = 0; i < 20; i+=1) {
     snprintf(key_id+i*2, 3, "%02X",
              static_cast<unsigned char>(fingerprint_[i]));

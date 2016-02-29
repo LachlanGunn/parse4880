@@ -16,7 +16,7 @@
 
 std::string read_file(std::string filename) {
   std::ifstream file;
-  file.open(filename);
+  file.open(filename); // Flawfinder: ignore (give the user what they want)
 
   std::stringstream str_stream;
   str_stream << file.rdbuf();

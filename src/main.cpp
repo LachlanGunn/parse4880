@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
   }
 
   std::ifstream pgp_file;
-  pgp_file.open(argv[1]);
+  pgp_file.open(argv[1]); // Flawfinder: ignore (give the user what they want)
 
   std::stringstream str_stream;
   str_stream << pgp_file.rdbuf();

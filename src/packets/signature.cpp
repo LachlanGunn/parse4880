@@ -121,7 +121,7 @@ uint8_t SignaturePacket::tag() const {
 }
 
 std::string SignaturePacket::str() const {
-  char uid_string[17];
+  char uid_string[17]; // Flawfinder: ignore (uids have known length)
   const unsigned char* unsigned_key_id =
       reinterpret_cast<const unsigned char*>(key_id_.c_str());
   snprintf(uid_string, 17, "%02x%02x%02x%02x%02x%02x%02x%02x",

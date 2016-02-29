@@ -44,6 +44,7 @@ struct find_length_result find_length_new(const std::string& string_data,
   // Now we have to get the length.  This is a bit tricky.
   // When we first checked the length, we made sure that the first
   // octet was available---this tells us how long the total length is.
+  // XXX: We didn't check the length.
   result.length = (unsigned char)data[field_position];
   result.length_field_length = 1;
 
@@ -98,7 +99,12 @@ struct find_length_result find_length_new(const std::string& string_data,
  * Find the length of a old-style packet chunk.
  *
  * An old-style packet encodes its length type in the header
- * than in the header.
+ * rather than in the first octet.  The two lower-order bits of
+ * the header contain a value N; the header is followed by a
+ * length field of 2^N octets.
+ *
+ * The exception to this is where N=3.  Then, the packet
+ * continues until the end of of the data.
  */
 struct find_length_result find_length_old(const std::string& data,
                                           int field_position,
@@ -158,7 +164,11 @@ std::string WriteInteger(int64_t value, uint8_t length) {
   return result;
 }
 
-
+/**
+ * Parse a string of binary OpenPGP packet data.
+ *
+ * OpenPGP files are composed of several concatenated packets.
+ */
 std::list<std::shared_ptr<PGPPacket>> parse(std::string data) {
   std::list<std::shared_ptr<PGPPacket>> parsed_packets;
       
@@ -238,16 +248,43 @@ std::list<std::shared_ptr<PGPPacket>> parse(std::string data) {
   return parsed_packets;
 }
 
+/**
+ * Parse a series of subpackets.
+ *
+ * Signature packets contain a series of subpackets that have a somewhat
+ * different format to the usual one:
+ *
+ *   New-style length (no partials)
+ *     Tag
+ *     Data
+ *   New-style length (no partials)
+ *     Tag
+ *     Data
+ *   ...
+ *
+ * In order to acommodate this we need a new packet parser.
+ *
+ * @param data  A string containing a series of subpackets.
+ *
+ * @return      A list of shared_ptrs to the extracted PGPPackets.
+ */
 std::list<std::shared_ptr<PGPPacket>> parse_subpackets(std::string data) {
   std::list<std::shared_ptr<PGPPacket>> subpackets;
   for (int64_t packet_start_position = 0; packet_start_position < data.length();) {
+    // First we need to extract the packet length.  This is a new-style
+    // length, so it has a variable length itself.
     struct find_length_result packet_length_result =
         find_length_new(data, packet_start_position, false);
 
+    // Now that we have decoded the length field, we can find the
+    // full size of the packet plus header.
     int64_t packet_length_with_overhead =
           packet_length_result.length_field_length
         + packet_length_result.length;
 
+    // Check that the packet has a nonzero length that doesn't extend
+    // beyond the data that we have been given.  It has to be nonzero
+    // because the first octet of the packet is the subpacket tag.
     if (data.length() < packet_start_position + packet_length_with_overhead
         || packet_length_result.length == 0) {
       throw packet_length_error(-1,
@@ -255,15 +292,24 @@ std::list<std::shared_ptr<PGPPacket>> parse_subpackets(std::string data) {
                                 data.length() - packet_start_position); 
     }
 
+    // Extract the tag octet from the packet.
     uint8_t packet_tag =
         data[packet_start_position + packet_length_result.length_field_length];
 
+    // Push the newly-extracted packet into our return-value list.
+    //
+    // As yet we have not implemented proper container classes for the
+    // various subpackets, and instead just use an UnknownPGPPacket.
+    // Probably subpackets should have a somewhat separate hierarchy,
+    // but this is yet to be decided.
     subpackets.push_back(std::shared_ptr<PGPPacket>(new UnknownPGPPacket(
         packet_tag,
         data.substr(packet_start_position
                     + packet_length_result.length_field_length
                     + 1,
                     packet_length_result.length - 1))));
+
+    // Skip forward to the next packet.
     packet_start_position += packet_length_with_overhead;
   }
 
