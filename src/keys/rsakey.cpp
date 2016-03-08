@@ -38,15 +38,12 @@ CryptoPP::RSAFunction ReadRSAPublicKey(std::string key_material) {
     throw parse4880::invalid_header_error(-1);
   }
 
-  fprintf(stderr, "T: %ld\n", key_material.length());
-
   int64_t modulus_length = parse4880::ReadInteger(key_material.substr(0,2));
 
   modulus_length = ((modulus_length+7) / 8);
   if (key_material.length() < 2 + modulus_length) {
     throw parse4880::invalid_header_error(-1);
   }
-  fprintf(stderr, "n: %ld\n", modulus_length);
 
   CryptoPP::Integer modulus;
   modulus.OpenPGPDecode(reinterpret_cast<const uint8_t*>(
@@ -54,7 +51,6 @@ CryptoPP::RSAFunction ReadRSAPublicKey(std::string key_material) {
 
   int64_t exponent_length = parse4880::ReadInteger(
       key_material.substr(2+modulus_length,2));
-  fprintf(stderr, "e: %ld\n", exponent_length);
   exponent_length = ((exponent_length +7) / 8);
   if (key_material.length() < 4 + modulus_length + exponent_length) {
     throw parse4880::invalid_header_error(-1);
