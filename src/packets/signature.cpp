@@ -60,6 +60,9 @@ SignaturePacket::SignaturePacket(std::string packet_data)
 
     // The rest of the packet is the signature.
     signature_ = packet_data.substr(19);
+
+    // Finally, save the signature data to be hashed.
+    hashed_data_ = packet_data.substr(2, 5);
   }
   else if(version_ == 4) {
     // A version four signature has the following:

@@ -88,10 +88,12 @@ void RSAVerificationContext<Hash>::Update(const std::string& data) {
 template <class Hash>
 bool RSAVerificationContext<Hash>::Verify() {
   Update(signature_.hashed_data());
-  
-  const uint8_t trailer[]  = {0x04, 0xFF};
-  Update(trailer, sizeof(trailer));
-  Update(WriteInteger(signature_.hashed_data().length(), 4));
+
+  if (4 == signature_.version()) {
+    const uint8_t trailer[]  = {0x04, 0xFF};
+    Update(trailer, sizeof(trailer));
+    Update(WriteInteger(signature_.hashed_data().length(), 4));
+  }
 
   verifier_.InputSignature(*accumulator_,
                            reinterpret_cast<const uint8_t*>(
@@ -119,6 +121,22 @@ RSAKey::GetVerificationContext(const SignaturePacket& signature) {
   switch (signature.hash_algorithm()) {
     case kHashSHA1:
       ctx = new RSAVerificationContext<CryptoPP::SHA1>(
+          impl_->public_transformation, signature);
+      break;
+    case kHashSHA224:
+      ctx = new RSAVerificationContext<CryptoPP::SHA224>(
+          impl_->public_transformation, signature);
+      break;
+    case kHashSHA256:
+      ctx = new RSAVerificationContext<CryptoPP::SHA256>(
+          impl_->public_transformation, signature);
+      break;
+    case kHashSHA384:
+      ctx = new RSAVerificationContext<CryptoPP::SHA384>(
+          impl_->public_transformation, signature);
+      break;
+    case kHashSHA512:
+      ctx = new RSAVerificationContext<CryptoPP::SHA512>(
           impl_->public_transformation, signature);
       break;
     default:
