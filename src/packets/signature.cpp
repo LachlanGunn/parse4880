@@ -16,7 +16,7 @@ SignaturePacket::SignaturePacket(std::string packet_data)
   if (packet_data.length() < 1) {
     throw invalid_header_error(-1);
   }
-  version_ = packet_data[0];
+  version_ = packet_data.at(0);
   if (version_ == 3) {
     // A version three signature packet has the following:
     //
@@ -37,7 +37,7 @@ SignaturePacket::SignaturePacket(std::string packet_data)
 
     // There should always be five bytes of hashed material, so check
     // that the provided length is correct.
-    if (5 != packet_data[1]) {
+    if (5 != packet_data.at(1)) {
       throw invalid_header_error(-1);
     }
 
@@ -45,7 +45,7 @@ SignaturePacket::SignaturePacket(std::string packet_data)
     // we can just go ahead and copy it.
 
     // Signature type (byte 2)
-    signature_type_ = packet_data[2];
+    signature_type_ = packet_data.at(2);
 
     // TODO: Copy the creation time (bytes 3--6)
 
@@ -53,8 +53,8 @@ SignaturePacket::SignaturePacket(std::string packet_data)
     key_id_ = packet_data.substr(7,8).c_str();
 
     // Algorithms (bytes 14--15)
-    public_key_algorithm_ = packet_data[15];
-    hash_algorithm_ = packet_data[16];
+    public_key_algorithm_ = packet_data.at(15);
+    hash_algorithm_ = packet_data.at(16);
 
     // TODO: Copy the hash quick-check field (bytes 17--18)
 
@@ -82,9 +82,9 @@ SignaturePacket::SignaturePacket(std::string packet_data)
       throw invalid_header_error(0);
     }
 
-    signature_type_       = packet_data[1];
-    public_key_algorithm_ = packet_data[2];
-    hash_algorithm_       = packet_data[3];
+    signature_type_       = packet_data.at(1);
+    public_key_algorithm_ = packet_data.at(2);
+    hash_algorithm_       = packet_data.at(3);
 
     size_t hashed_data_count = ReadInteger(packet_data.substr(4,2));
     if (packet_data.length() < 10+hashed_data_count) {
