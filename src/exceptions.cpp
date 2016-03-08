@@ -44,4 +44,8 @@ unsupported_feature_error::unsupported_feature_error(
 invalid_packet_error::invalid_packet_error(std::string problem)
     : format_error(-1, problem) {}
 
+wrong_algorithm_error::wrong_algorithm_error()
+    : std::logic_error("Wrong algorithm code.") {
+}
+
 }

@@ -7,7 +7,9 @@ using boost::format;
 
 namespace parse4880 {
 
-class format_error : public std::runtime_error {
+class parse4880_error {};
+
+class format_error : public parse4880_error, public std::runtime_error {
  public:
   format_error(std::size_t position);
   format_error(std::size_t position, std::string error);
@@ -50,6 +52,11 @@ public:
   invalid_packet_error(std::string problem);
 private:
   std::string problem_;
+};
+
+class wrong_algorithm_error : public parse4880_error, public std::logic_error {
+ public:
+  wrong_algorithm_error();
 };
 
 }

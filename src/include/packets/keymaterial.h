@@ -1,6 +1,8 @@
 #ifndef PARSE4880_INCLUDE_PACKETS_KEYMATERIAL_H_
 #define PARSE4880_INCLUDE_PACKETS_KEYMATERIAL_H_
 
+#include "packet.h"
+
 namespace parse4880 {
 
 class KeyMaterialPacket : public PGPPacket {

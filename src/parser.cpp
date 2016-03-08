@@ -41,10 +41,10 @@ struct find_length_result find_length_new(const std::string& string_data,
   const unsigned char* data =
       reinterpret_cast<const unsigned char*>(string_data.c_str());
 
-  // Now we have to get the length.  This is a bit tricky.
-  // When we first checked the length, we made sure that the first
-  // octet was available---this tells us how long the total length is.
-  // XXX: We didn't check the length.
+  // Now we have to get the length.
+  if (string_data.length() < 2) {
+    throw invalid_header_error(field_position);
+  }
   result.length = (unsigned char)data[field_position];
   result.length_field_length = 1;
 

@@ -13,6 +13,8 @@
 #include "parser.h"
 #include "packet.h"
 #include "exceptions.h"
+#include "keys/rsakey.h"
+#include "packets/keymaterial.h"
 
 std::string read_file(std::string filename) {
   std::ifstream file;
@@ -144,6 +146,12 @@ int main(int argc, char** argv) {
     //printf("Verification: %d\n", acc->TruncatedVerify(expected, 2));
     printf("Verification: %d\n", verifier.Verify(acc));
     printf("Upfront: %d\n", verifier.SignatureUpfront());
+
+    parse4880::RSAKey key(*pk_packet);
+    std::unique_ptr<parse4880::VerificationContext> ctx =
+        key.GetVerificationContext(*signature_ptr);
+    ctx->Update(to_verify);
+    printf("Verification: %d\n", ctx->Verify());
   }
   
   return 0;
