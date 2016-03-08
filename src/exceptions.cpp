@@ -29,9 +29,7 @@ packet_length_error::packet_length_error(std::size_t position,
                                          std::size_t actual_length)
     : format_error(position,
                    (format("expected %1% bytes, but only %2% remain.")
-                    % claimed_length % actual_length ).str()),
-      claimed_length_(claimed_length),
-      actual_length_(actual_length) {}
+                    % claimed_length % actual_length ).str()) {}
 
 old_packet_error::old_packet_error(std::size_t position)
     : format_error(position, "unsupported old-format packet found") {}

@@ -30,9 +30,6 @@ class packet_length_error : public format_error {
   packet_length_error(std::size_t position,
                       std::size_t claimed_length,
                       std::size_t actual_length);
- private:
-  std::size_t claimed_length_;
-  std::size_t actual_length_;
 };
 
 class old_packet_error : public format_error {

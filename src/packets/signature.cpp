@@ -83,7 +83,7 @@ SignaturePacket::SignaturePacket(std::string packet_data)
     public_key_algorithm_ = packet_data[2];
     hash_algorithm_       = packet_data[3];
 
-    int32_t hashed_data_count = ReadInteger(packet_data.substr(4,2));
+    size_t hashed_data_count = ReadInteger(packet_data.substr(4,2));
     if (packet_data.length() < 10+hashed_data_count) {
       throw invalid_header_error(1);
     }
@@ -92,7 +92,7 @@ SignaturePacket::SignaturePacket(std::string packet_data)
 
     hashed_data_ = packet_data.substr(0, 6+hashed_data_count);
 
-    int32_t unhashed_data_count =
+    size_t unhashed_data_count =
         ReadInteger(packet_data.substr(6+hashed_data_count, 2));
 
     if (packet_data.length() < 10+hashed_data_count+unhashed_data_count) {

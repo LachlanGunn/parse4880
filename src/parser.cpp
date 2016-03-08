@@ -35,7 +35,7 @@ struct find_length_result {
  * TODO: Deal with partial-length records.
  */
 struct find_length_result find_length_new(const std::string& string_data,
-                                          int field_position,
+                                          size_t field_position,
                                           bool allow_partial) {
   struct find_length_result result;
   const unsigned char* data =
@@ -107,7 +107,7 @@ struct find_length_result find_length_new(const std::string& string_data,
  * continues until the end of of the data.
  */
 struct find_length_result find_length_old(const std::string& data,
-                                          int field_position,
+                                          size_t field_position,
                                           int length_type) {
   struct find_length_result result;
 
@@ -138,9 +138,9 @@ struct find_length_result find_length_old(const std::string& data,
  *
  * @return  The decoded integer value.
  */
-int64_t ReadInteger(std::string encoded_integer) {
-  int64_t parsed_integer = 0;
-  for (int i = 0; i < encoded_integer.length(); i++) {
+uint64_t ReadInteger(std::string encoded_integer) {
+  uint64_t parsed_integer = 0;
+  for (size_t i = 0; i < encoded_integer.length(); i++) {
     parsed_integer +=
         (uint8_t)(encoded_integer[i])
         << ( 8*(encoded_integer.length() - i - 1) );
@@ -155,7 +155,7 @@ int64_t ReadInteger(std::string encoded_integer) {
  *
  * @return  The decoded integer value.
  */
-std::string WriteInteger(int64_t value, uint8_t length) {
+std::string WriteInteger(uint64_t value, uint8_t length) {
   std::string result((size_t)length, ' ');
   for (int i = length-1; i >= 0; i--) {
     result[i] = value & 0xFF;
@@ -172,7 +172,7 @@ std::string WriteInteger(int64_t value, uint8_t length) {
 std::list<std::shared_ptr<PGPPacket>> parse(std::string data) {
   std::list<std::shared_ptr<PGPPacket>> parsed_packets;
       
-  int64_t packet_start_position = 0;
+  size_t packet_start_position = 0;
   while(true) {
     // Check that we have enough data left.  We need at one byte for the
     // header and at least one byte for the length field.
@@ -270,7 +270,7 @@ std::list<std::shared_ptr<PGPPacket>> parse(std::string data) {
  */
 std::list<std::shared_ptr<PGPPacket>> parse_subpackets(std::string data) {
   std::list<std::shared_ptr<PGPPacket>> subpackets;
-  for (int64_t packet_start_position = 0; packet_start_position < data.length();) {
+  for (size_t packet_start_position = 0; packet_start_position < data.length();) {
     // First we need to extract the packet length.  This is a new-style
     // length, so it has a variable length itself.
     struct find_length_result packet_length_result =
