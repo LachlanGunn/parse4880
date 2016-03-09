@@ -1,8 +1,17 @@
 #ifndef PARSE4880_INCLUDE_CONSTANTS_H
 #define PARSE4880_INCLUDE_CONSTANTS_H
 
+/**
+ * @file constants.h
+ *
+ * Constants from the OpenPGP standard.
+ */
+
 namespace parse4880 {
-  
+
+/**
+ * Public key algorithm codes from RFC4880.
+ */
 enum PublicKeyAlgorithmCodes {
   kPublicKeyRSAEncryptOrSign = 1,
   kPublicKeyRSAEncryptOnly   = 2,
@@ -11,6 +20,9 @@ enum PublicKeyAlgorithmCodes {
   kPublicKeyDSA              = 17  
 };
 
+/**
+ * Hash algorithm codes from RFC4880.
+ */
 enum HashAlgorithmCodes {
   kHashMD5 = 1,
   kHashSHA1 = 2,

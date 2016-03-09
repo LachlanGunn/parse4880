@@ -9,6 +9,10 @@
 
 namespace parse4880 {
 
+/**
+ * @todo Copy the creation time.
+ * @todo Copy the quick-check field.
+ */
 SignaturePacket::SignaturePacket(std::string packet_data)
     : PGPPacket(packet_data) {
   // We need to parse a signature subpacket.  This could be either

@@ -32,7 +32,7 @@ struct find_length_result {
  * length record we have---one-octet, two-octet, five-octet, or a partial
  * record---then decode and return it.
  *
- * TODO: Deal with partial-length records.
+ * @todo Deal with partial-length records.
  */
 struct find_length_result find_length_new(const std::string& string_data,
                                           size_t field_position,
@@ -131,13 +131,6 @@ struct find_length_result find_length_old(const std::string& data,
 
 }
 
-/**
- * Parse an OpenPGP-style small (as opposed to multiprecision) integer.
- *
- * @param   encoded_integer    An string to be converted to an integer.
- *
- * @return  The decoded integer value.
- */
 uint64_t ReadInteger(std::string encoded_integer) {
   uint64_t parsed_integer = 0;
   for (size_t i = 0; i < encoded_integer.length(); i++) {
@@ -148,13 +141,6 @@ uint64_t ReadInteger(std::string encoded_integer) {
   return parsed_integer;
 }
 
-/**
- * Encode an OpenPGP-style small (as opposed to multiprecision) integer.
- *
- * @param   encoded_integer    An string to be converted to an integer.
- *
- * @return  The decoded integer value.
- */
 std::string WriteInteger(uint64_t value, uint8_t length) {
   std::string result((size_t)length, ' ');
   for (int i = length-1; i >= 0; i--) {
@@ -164,11 +150,6 @@ std::string WriteInteger(uint64_t value, uint8_t length) {
   return result;
 }
 
-/**
- * Parse a string of binary OpenPGP packet data.
- *
- * OpenPGP files are composed of several concatenated packets.
- */
 std::list<std::shared_ptr<PGPPacket>> parse(std::string data) {
   std::list<std::shared_ptr<PGPPacket>> parsed_packets;
       
@@ -248,26 +229,6 @@ std::list<std::shared_ptr<PGPPacket>> parse(std::string data) {
   return parsed_packets;
 }
 
-/**
- * Parse a series of subpackets.
- *
- * Signature packets contain a series of subpackets that have a somewhat
- * different format to the usual one:
- *
- *   New-style length (no partials)
- *     Tag
- *     Data
- *   New-style length (no partials)
- *     Tag
- *     Data
- *   ...
- *
- * In order to acommodate this we need a new packet parser.
- *
- * @param data  A string containing a series of subpackets.
- *
- * @return      A list of shared_ptrs to the extracted PGPPackets.
- */
 std::list<std::shared_ptr<PGPPacket>> parse_subpackets(std::string data) {
   std::list<std::shared_ptr<PGPPacket>> subpackets;
   for (size_t packet_start_position = 0; packet_start_position < data.length();) {

@@ -10,6 +10,14 @@
 
 namespace parse4880 {
 
+/// @cond SHOW_INTERNAL
+
+/**
+ * Storage class for RSA key material.
+ *
+ * This class is necessary in order to avoid a Crypto++ dependency
+ * in key.h.
+ */
 class RSAKey::impl {
  public:
   CryptoPP::RSAFunction public_transformation;
@@ -17,6 +25,11 @@ class RSAKey::impl {
 
 namespace {
 
+/**
+ * Verification context for RSA signatures with PKCSv1.5.
+ *
+ * @see VerificationContext
+ */
 template <class Hash>
 class RSAVerificationContext : public VerificationContext {
  public:
@@ -33,6 +46,18 @@ class RSAVerificationContext : public VerificationContext {
   CryptoPP::PK_MessageAccumulator* accumulator_;
 };
 
+/**
+ * Read an RSA public key from a public key packet's key material
+ * section.
+ *
+ * The last part of public key packet---that containing the key itself---is
+ * algorithm-dependent.  This function parses this part into a Crypto++
+ * RSAFunction object from which we may create a verifier.
+ *
+ * @param key_material  The public key to be parsed.
+ *
+ * @return An RSAFunction corresponding to the encoded exponent and modulus.
+ */
 CryptoPP::RSAFunction ReadRSAPublicKey(std::string key_material) {
   if (key_material.length() < 2) {
     throw parse4880::invalid_header_error(-1);
@@ -145,5 +170,7 @@ RSAKey::GetVerificationContext(const SignaturePacket& signature) {
 
   return std::unique_ptr<VerificationContext>(ctx);
 }
+
+/// @endcond
 
 }

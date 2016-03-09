@@ -57,6 +57,13 @@ PublicKeyPacket::PublicKeyPacket(const std::string& data)
   public_key_algorithm_ = data[5];
   key_material_ = data.substr(6);
 
+  /*
+   * The fingerprint is calculated as the SHA-1 hash of the following:
+   *
+   *   1. The constant octet 0x99
+   *   2. A two-octet length of of the packet.
+   *   3. The entirety of the packet data.
+   */
   CryptoPP::SHA1 sha1;
   sha1.Update(reinterpret_cast<const unsigned char*>("\x99"), 1);
   sha1.Update(reinterpret_cast<const unsigned char*>(
@@ -76,12 +83,17 @@ uint8_t PublicKeyPacket::tag() const {
 }
 
 std::string PublicKeyPacket::str() const {
+  const std::string& key_fingerprint = fingerprint();
   char key_id[41]; // Flawfinder: ignore (fingerprints have known length)
   for(int i = 0; i < 20; i+=1) {
     snprintf(key_id+i*2, 3, "%02X",
-             static_cast<unsigned char>(fingerprint_[i]));
+             static_cast<unsigned char>(key_fingerprint[i]));
   }
   return (boost::format("Public key: %s") % key_id).str();
+}
+
+const std::string& PublicKeyPacket::fingerprint() const {
+  return fingerprint_;
 }
 
 const std::string& PublicKeyPacket::key_material() const {
@@ -96,10 +108,11 @@ uint8_t PublicSubkeyPacket::tag() const {
 }
 
 std::string PublicSubkeyPacket::str() const {
+  const std::string& key_fingerprint = fingerprint();
   char key_id[41]; // Flawfinder: ignore (fingerprints have known length)
   for(int i = 0; i < 20; i+=1) {
     snprintf(key_id+i*2, 3, "%02X",
-             static_cast<unsigned char>(fingerprint_[i]));
+             static_cast<unsigned char>(key_fingerprint[i]));
   }
   return (boost::format("Public subkey: %s") % key_id).str();
 }

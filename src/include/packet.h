@@ -1,6 +1,12 @@
 #ifndef PARSE4880_INCLUDE_PACKET_H_
 #define PARSE4880_INCLUDE_PACKET_H_
 
+/**
+ * @file packet.h
+ *
+ * Parent header file for all packet types.
+ */
+
 #include <cstdint>
 #include <string>
 #include <memory>
