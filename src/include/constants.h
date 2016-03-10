@@ -33,6 +33,33 @@ enum HashAlgorithmCodes {
   kHashSHA224 = 11
 };
 
+/**
+ * Signature type codes from RFC4880.
+ */
+enum SignatureTypeCodes {
+  kSignatureBinary     = 0x00,
+  kSignatureText       = 0x01,
+  kSignatureStandalone = 0x02,
+
+  kSignatureCertificationGeneric  = 0x10,
+  kSignatureCertificationPersona  = 0x11,
+  kSignatureCertificationCasual   = 0x12,
+  kSignatureCertificationPositive = 0x13,
+
+  kSignatureSubkeyBinding     = 0x18,
+  kSignaturePrimaryKeyBinding = 0x19,
+
+  kSignatureKey = 0x1F,
+
+  kSignatureRevocationKey           = 0x20,
+  kSignatureRevocationSubkey        = 0x28,
+  kSignatureRevocationCertification = 0x30,
+
+  kSignatureTimestamp = 0x40,
+
+  kSignatureThirdPartyConfirmation = 0x50
+};
+
 }
 
 #endif  // PARSE4880_INCLUDE_CONSTANTS_H

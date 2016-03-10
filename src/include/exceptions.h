@@ -147,9 +147,7 @@ class wrong_algorithm_error : public parse4880_error, public std::logic_error {
 }
 
 /**
- * @{
- */
-
+ * @}
  */
 
 #endif  // PARSE4880_INCLUDE_EXCEPTIONS_H_

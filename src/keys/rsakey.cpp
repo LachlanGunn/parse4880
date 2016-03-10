@@ -35,6 +35,7 @@ class RSAVerificationContext : public VerificationContext {
  public:
   explicit RSAVerificationContext(const CryptoPP::RSAFunction& public_key,
                                   const SignaturePacket& signature);
+  ~RSAVerificationContext();
 
   virtual void Update(const uint8_t* data, std::size_t len);
   virtual void Update(const std::string& data);
@@ -59,17 +60,23 @@ class RSAVerificationContext : public VerificationContext {
  * @return An RSAFunction corresponding to the encoded exponent and modulus.
  */
 CryptoPP::RSAFunction ReadRSAPublicKey(std::string key_material) {
+  /*
+   * The public key format is simply two multiprecision integers.
+   * We start by making sure that there is a length field...
+   */
   if (key_material.length() < 2) {
     throw parse4880::invalid_header_error(-1);
   }
 
+  // Then we read it and check that there are enough bits in the string.
   size_t modulus_length = parse4880::ReadInteger(key_material.substr(0,2));
 
   modulus_length = ((modulus_length+7) / 8);
-  if (key_material.length() < 2 + modulus_length) {
+  if (key_material.length() < 4 + modulus_length) {
     throw parse4880::invalid_header_error(-1);
   }
 
+  // First comes the modulus.  We extract and decode it.
   CryptoPP::Integer modulus;
   modulus.OpenPGPDecode(reinterpret_cast<const uint8_t*>(
       key_material.substr(0, 2+modulus_length).c_str()), 2+modulus_length);
@@ -101,6 +108,11 @@ RSAVerificationContext<Hash>::RSAVerificationContext(
 }
 
 template <class Hash>
+RSAVerificationContext<Hash>::~RSAVerificationContext() {
+  delete accumulator_;
+}
+
+template <class Hash>
 void RSAVerificationContext<Hash>::Update(const uint8_t* data, std::size_t len) {
   accumulator_->Update(data, len);
 }
@@ -124,7 +136,7 @@ bool RSAVerificationContext<Hash>::Verify() {
                            reinterpret_cast<const uint8_t*>(
                                signature_.signature().substr(2).c_str()),
                            signature_.signature().length() - 2);
-  return verifier_.Verify(accumulator_);
+  return verifier_.VerifyAndRestart(*accumulator_);
 }
 
 }

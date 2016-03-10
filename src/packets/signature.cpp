@@ -174,6 +174,10 @@ const std::string& SignaturePacket::signature() const {
   return signature_;
 }
 
+const std::string& SignaturePacket::key_id() const {
+  return key_id_;
+}
+
 void SignaturePacket::SetSignaturePropertiesFromSubpackets() {
   const std::list<std::shared_ptr<PGPPacket>>& subpackets = this->subpackets();
   for (auto current_subpacket_ptr  = subpackets.begin();

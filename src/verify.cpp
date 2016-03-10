@@ -13,6 +13,7 @@
 #include "parser.h"
 #include "packet.h"
 #include "exceptions.h"
+#include "constants.h"
 #include "keys/rsakey.h"
 #include "packets/keymaterial.h"
 
@@ -45,27 +46,41 @@ int main(int argc, char** argv) {
   std::list<std::shared_ptr<parse4880::PGPPacket>> key_packets
       = parse_file(argv[3]);
 
-  std::shared_ptr<parse4880::PublicKeyPacket> pk_packet
-      = std::dynamic_pointer_cast<parse4880::PublicKeyPacket>(
-          key_packets.front());
-
-  if (nullptr == pk_packet) {
-    fprintf(stderr, "Bad key file.\n");
+  if (1 != packets.size()) {
+    fprintf(stderr, "ERROR: %s is not a detached signature.\n", argv[2]);
     return 1;
   }
 
-  for (auto i = packets.begin(); i != packets.end(); i++) {
-    std::shared_ptr<parse4880::SignaturePacket> signature_ptr
-        = std::dynamic_pointer_cast<parse4880::SignaturePacket>(*i);
-    if (nullptr == signature_ptr) {
+  std::shared_ptr<parse4880::SignaturePacket> signature_packet
+      = std::dynamic_pointer_cast<parse4880::SignaturePacket>(
+          packets.front());
+
+  if (nullptr == signature_packet) {
+    fprintf(stderr, "ERROR: %s is not a detached signature.\n", argv[2]);
+    return 1;
+  }
+
+  if (signature_packet->signature_type() != parse4880::kSignatureBinary) {
+    fprintf(stderr, "ERROR: %s is not a detached signature.\n", argv[2]);
+    return 1;
+  }
+
+  for (auto i = key_packets.begin(); i != key_packets.end(); i++) {
+    std::shared_ptr<parse4880::PublicKeyPacket> key_ptr
+        = std::dynamic_pointer_cast<parse4880::PublicKeyPacket>(*i);
+
+    if (nullptr == key_ptr ||
+        key_ptr->fingerprint().substr(12) != signature_packet->key_id()) {
       continue;
     }
 
-    parse4880::RSAKey key(*pk_packet);
+    fprintf(stderr, "Found key: %s\n", key_ptr->str().c_str());
+
+    parse4880::RSAKey key(*key_ptr);
     std::unique_ptr<parse4880::VerificationContext> ctx =
-        key.GetVerificationContext(*signature_ptr);
+        key.GetVerificationContext(*signature_packet);
     ctx->Update(to_verify);
-    printf("Verification: %d\n", ctx->Verify());
+    fprintf(stderr, "Verification: %d\n", ctx->Verify());
   }
   
   return 0;
