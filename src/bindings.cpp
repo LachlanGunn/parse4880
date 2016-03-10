@@ -58,11 +58,19 @@ int main(int argc, char** argv) {
           std::dynamic_pointer_cast<parse4880::SignaturePacket>(*i);
 
       if (nullptr == key_ptr || nullptr == uid_ptr
-          || key_ptr->fingerprint().substr(12) != signature_ptr->key_id()
-          || signature_ptr->signature_type()
-              != parse4880::kSignatureCertificationPositive) {
+          || key_ptr->fingerprint().substr(12) != signature_ptr->key_id()) {
         continue;
       }
+
+      switch (signature_ptr->signature_type()) {
+        case parse4880::kSignatureCertificationGeneric:
+        case parse4880::kSignatureCertificationCasual:
+        case parse4880::kSignatureCertificationPositive:
+          break;
+        default:
+          continue;
+      }
+
 
       fprintf(stderr, "Certification by %s on\n\t%s\n\t%s\n",
               signature_ptr->str().c_str(),
