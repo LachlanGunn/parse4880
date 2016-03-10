@@ -38,6 +38,19 @@ class VerificationContext {
   virtual void Update(const std::string& data) = 0;
 
   /**
+   * Provide data to be from a C string..
+   *
+   * The Update method incrementally hashes data to be verified. It may
+   * be repeatedly called with additional data in order to allow signatures
+   * to be verified without storing all of the data in memory.
+   *
+   * @param data    Additional data to be verified.
+   * @param length  The length of the supplied string.
+   * @see Verify
+   */
+  virtual void Update(const uint8_t* data, size_t length) = 0;
+
+  /**
    * Verify the signature.
    *
    * After adding the data to be verified using repeated calls to Update,
