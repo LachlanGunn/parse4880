@@ -82,21 +82,28 @@ int main(int argc, char** argv) {
               signature_ptr->str().c_str(),
               uid_ptr->str().c_str(),
               key_ptr->str().c_str());
-      parse4880::RSAKey key(*key_ptr);
-      std::unique_ptr<parse4880::VerificationContext> ctx =
-          key.GetVerificationContext(*signature_ptr);
 
-      uint8_t key_header[] = {0x99};
-      ctx->Update(key_header, sizeof(key_header));
-      ctx->Update(parse4880::WriteInteger(key_ptr->contents().length(), 2));
-      ctx->Update(key_ptr->contents());
+      try {
+        parse4880::RSAKey key(*key_ptr);
+        std::unique_ptr<parse4880::VerificationContext> ctx =
+            key.GetVerificationContext(*signature_ptr);
 
-      uint8_t uid_header[] = {0xB4};
-      ctx->Update(uid_header, sizeof(uid_header));
-      ctx->Update(parse4880::WriteInteger(uid_ptr->contents().length(), 4));
-      ctx->Update(uid_ptr->contents());
+        uint8_t key_header[] = {0x99};
+        ctx->Update(key_header, sizeof(key_header));
+        ctx->Update(parse4880::WriteInteger(key_ptr->contents().length(), 2));
+        ctx->Update(key_ptr->contents());
 
-      fprintf(stderr, "Verification: %d\n", ctx->Verify());
+        uint8_t uid_header[] = {0xB4};
+        ctx->Update(uid_header, sizeof(uid_header));
+        ctx->Update(parse4880::WriteInteger(uid_ptr->contents().length(), 4));
+        ctx->Update(uid_ptr->contents());
+
+        fprintf(stderr, "Verification: %d\n", ctx->Verify());
+      }
+      catch (parse4880::parse4880_error e) {
+        fprintf(stderr, "Error during verification:\n\t%s\n", e.what());
+        return 1;
+      }
     }
     else {
       continue;

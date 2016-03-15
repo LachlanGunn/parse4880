@@ -88,11 +88,18 @@ int main(int argc, char** argv) {
 
     fprintf(stderr, "Found key: %s\n", key_ptr->str().c_str());
 
-    parse4880::RSAKey key(*key_ptr);
-    std::unique_ptr<parse4880::VerificationContext> ctx =
-        key.GetVerificationContext(*signature_packet);
-    ctx->Update(to_verify);
-    fprintf(stderr, "Verification: %d\n", ctx->Verify());
+    try {
+      parse4880::RSAKey key(*key_ptr);
+      std::unique_ptr<parse4880::VerificationContext> ctx =
+          key.GetVerificationContext(*signature_packet);
+      ctx->Update(to_verify);
+      fprintf(stderr, "Verification: %d\n", ctx->Verify());
+    }
+    catch (parse4880::parse4880_error e) {
+      fprintf(stderr, "Error during verification:\n\t%s\n", e.what());
+      return 1;
+    }
+
   }
   
   return 0;
