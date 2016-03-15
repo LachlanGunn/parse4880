@@ -85,10 +85,10 @@ struct find_length_result find_length_new(const std::string& string_data,
     }
     // The five-octet length is defined in RFC4880§4.2.2.3
     result.length =
-          (data[field_position + 1] << 24)
-        + (data[field_position + 2] << 16)
-        + (data[field_position + 3] << 8)
-        +  data[field_position + 4];
+          ((int64_t)data[field_position + 1] << 24)
+        + ((int64_t)data[field_position + 2] << 16)
+        + ((int64_t)data[field_position + 3] << 8)
+        +  (int64_t)data[field_position + 4];
     result.length_field_length = 5;
   }
   
