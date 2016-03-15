@@ -8,6 +8,7 @@
 
 #include "parser.h"
 #include "packet.h"
+#include "exceptions.h"
 
 void print_packets(std::list<std::shared_ptr<parse4880::PGPPacket>> packets,
                    int level) {
@@ -33,8 +34,13 @@ int main(int argc, char** argv) {
   std::stringstream str_stream;
   str_stream << pgp_file.rdbuf();
 
-  std::list<std::shared_ptr<parse4880::PGPPacket>> packets
-      = parse4880::parse(str_stream.str());
+  std::list<std::shared_ptr<parse4880::PGPPacket>> packets;
+  try {
+    packets = parse4880::parse(str_stream.str());
+  }
+  catch(parse4880::parse4880_error e) {
+    fprintf(stderr, "Parse error:\n\t%s\n", e.what());
+  }
 
   print_packets(packets, 0);
 }

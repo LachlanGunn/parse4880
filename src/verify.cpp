@@ -40,11 +40,23 @@ int main(int argc, char** argv) {
   }
 
   std::string to_verify = read_file(argv[1]);
-  std::list<std::shared_ptr<parse4880::PGPPacket>> packets
-      = parse_file(argv[2]);
+  std::list<std::shared_ptr<parse4880::PGPPacket>> packets;
+  try {
+    packets = parse_file(argv[2]);
+  }
+  catch(parse4880::parse4880_error e) {
+    fprintf(stderr, "Parse error in signature file:\n\t%s\n", e.what());
+  }
 
-  std::list<std::shared_ptr<parse4880::PGPPacket>> key_packets
-      = parse_file(argv[3]);
+
+  std::list<std::shared_ptr<parse4880::PGPPacket>> key_packets;
+  try {
+    key_packets = parse_file(argv[3]);
+  }
+  catch(parse4880::parse4880_error e) {
+    fprintf(stderr, "Parse error in keyring:\n\t%s\n", e.what());
+  }
+
 
   if (1 != packets.size()) {
     fprintf(stderr, "ERROR: %s is not a detached signature.\n", argv[2]);

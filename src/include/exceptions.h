@@ -22,7 +22,7 @@ namespace parse4880 {
 /**
  * Base class for all Parse4880 exceptions.
  */
-class parse4880_error {};
+class parse4880_error : public std::exception {};
 
 /**
  * Base class for all parsing errors.

@@ -39,8 +39,14 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  std::list<std::shared_ptr<parse4880::PGPPacket>> key_packets
-      = parse_file(argv[1]);
+  std::list<std::shared_ptr<parse4880::PGPPacket>> key_packets;
+  try {
+    key_packets = parse_file(argv[1]);
+  }
+  catch(parse4880::parse4880_error e) {
+    fprintf(stderr, "Parse error:\n\t%s\n", e.what());
+    return 1;
+  }
 
   std::shared_ptr<parse4880::PublicKeyPacket> key_ptr = nullptr;
   std::shared_ptr<parse4880::UserIDPacket> uid_ptr = nullptr;
@@ -88,10 +94,10 @@ int main(int argc, char** argv) {
       uint8_t uid_header[] = {0xB4};
       ctx->Update(uid_header, sizeof(uid_header));
       ctx->Update(parse4880::WriteInteger(uid_ptr->contents().length(), 4));
-      ctx->Update(uid_ptr->contents());      
+      ctx->Update(uid_ptr->contents());
 
       fprintf(stderr, "Verification: %d\n", ctx->Verify());
-}
+    }
     else {
       continue;
     }
