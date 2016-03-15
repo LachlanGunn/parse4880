@@ -25,6 +25,8 @@ namespace parse4880 {
  */
 class VerificationContext {
  public:
+  virtual ~VerificationContext();
+
   /**
    * Provide data to be verified.
    *

@@ -35,7 +35,7 @@ class RSAVerificationContext : public VerificationContext {
  public:
   explicit RSAVerificationContext(const CryptoPP::RSAFunction& public_key,
                                   const SignaturePacket& signature);
-  ~RSAVerificationContext();
+  virtual ~RSAVerificationContext();
 
   virtual void Update(const uint8_t* data, std::size_t len);
   virtual void Update(const std::string& data);
