@@ -21,16 +21,12 @@ std::shared_ptr<PGPPacket> PGPPacket::ParsePacket(uint8_t tag,
     switch (tag) {
       case 2:
         return std::shared_ptr<PGPPacket>(new SignaturePacket(packet));
-        break;
       case 6:
         return std::shared_ptr<PGPPacket>(new PublicKeyPacket(packet));
-        break;
       case 13:
         return std::shared_ptr<PGPPacket>(new UserIDPacket(packet));
-        break;
       case 14:
         return std::shared_ptr<PGPPacket>(new PublicSubkeyPacket(packet));
-        break;
       default:
         return std::shared_ptr<PGPPacket>(new UnknownPGPPacket(tag, packet));
     }
