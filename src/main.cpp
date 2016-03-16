@@ -40,6 +40,7 @@ int main(int argc, char** argv) {
   }
   catch(parse4880::parse4880_error e) {
     fprintf(stderr, "Parse error:\n\t%s\n", e.what());
+    return 1;
   }
 
   print_packets(packets, 0);

@@ -34,7 +34,7 @@ std::shared_ptr<PGPPacket> PGPPacket::ParsePacket(uint8_t tag,
       default:
         return std::shared_ptr<PGPPacket>(new UnknownPGPPacket(tag, packet));
     }
-  } catch (unsupported_feature_error e) {
+  } catch (parse4880_error e) {
     return std::shared_ptr<PGPPacket>(new UnknownPGPPacket(tag, packet));
   }
 }
