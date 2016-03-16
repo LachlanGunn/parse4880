@@ -1,0 +1,10 @@
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y libboost-dev libcrypto++-dev
+
+language: cpp
+compiler:
+  - gcc
+  - clang
+
+script: mkdir -p build && cd build && cmake .. && make
