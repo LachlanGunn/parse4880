@@ -51,6 +51,11 @@ class format_error : public parse4880_error, public std::runtime_error {
    *         error was found.
    */
   std::size_t position();
+
+  /**
+   * Default destructor.
+   */
+  ~format_error() noexcept = default;
   
  private:
   std::size_t position_;
@@ -69,6 +74,12 @@ class invalid_header_error : public format_error {
    * @param position  The position at which the error occurred.
    */
   invalid_header_error(std::size_t position);
+
+  /**
+   * Default destructor.
+   */
+  ~invalid_header_error() noexcept = default;
+
 };
 
 /**
@@ -87,6 +98,11 @@ class packet_length_error : public format_error {
   packet_length_error(std::size_t position,
                       std::size_t claimed_length,
                       std::size_t actual_length);
+
+  /**
+   * Default destructor.
+   */
+  ~packet_length_error() noexcept = default;
 };
 
 /**
@@ -100,6 +116,11 @@ class old_packet_error : public format_error {
    * @param position  The position at which the error occurred.
    */
   old_packet_error(std::size_t position);
+
+  /**
+   * Default destructor.
+   */
+  ~old_packet_error() noexcept = default;
 };
 
 /**
@@ -114,6 +135,12 @@ class unsupported_feature_error : public format_error {
    * @param feature   The feature that has not been implemented.
    */
   unsupported_feature_error(std::size_t position, std::string feature);
+
+  /**
+   * Default destructor.
+   */
+  ~unsupported_feature_error() noexcept = default;
+
  private:
   std::string feature_;
 };
@@ -129,6 +156,12 @@ public:
    * @param problem The problem that occurred.
    */
   invalid_packet_error(std::string problem);
+
+  /**
+   * Default destructor.
+   */
+  ~invalid_packet_error() noexcept = default;
+
 private:
   std::string problem_;
 };
@@ -142,6 +175,11 @@ class wrong_algorithm_error : public parse4880_error, public std::logic_error {
    * Constructor.
    */
   wrong_algorithm_error();
+
+  /**
+   * Default destructor.
+   */
+  ~wrong_algorithm_error() noexcept = default;
 };
 
 }
