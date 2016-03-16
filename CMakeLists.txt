@@ -3,8 +3,13 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.0)
 PROJECT(Parse4880)
 
 IF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  IF(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.6)
+    SET(GCC_CXX_STD "c++11")
+  ELSE()
+    SET(GCC_CXX_STD "c++0x")
+  ENDIF()
   SET(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror -Wextra -pedantic -g -Wno-sign-compare -Wno-unused-parameter")
+    "${CMAKE_CXX_FLAGS} -std=${GCC_CXX_STD} -Wall -Werror -Wextra -pedantic -g -Wno-sign-compare -Wno-unused-parameter")
 ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   SET(CMAKE_CXX_FLAGS
     "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Werror -ftemplate-depth=1024 -Wunreachable-code -Wimplicit-fallthrough -g")
