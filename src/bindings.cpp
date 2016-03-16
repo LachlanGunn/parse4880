@@ -34,7 +34,7 @@ std::list<std::shared_ptr<parse4880::PGPPacket>> parse_file(std::string file) {
 
 template <class T, class U>
 bool IsA(const std::shared_ptr<U>& ptr) {
-  return (std::dynamic_pointer_cast<T>(ptr) != 0);
+  return (std::dynamic_pointer_cast<T>(ptr) != nullptr);
 }
 
 int main(int argc, char** argv) {

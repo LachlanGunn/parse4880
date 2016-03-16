@@ -1,9 +1,9 @@
-sudo: no
+sudo: no	
 dist: trusty
 
 addons:
   apt:
-    sources:
+    packages:
     - libboost-dev
     - libcrypto++-dev
 
