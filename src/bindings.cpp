@@ -32,7 +32,10 @@ std::list<std::shared_ptr<parse4880::PGPPacket>> parse_file(std::string file) {
   return parse4880::parse(read_file(file));
 }
 
-
+template <class T, class U>
+bool IsA(const std::shared_ptr<U>& ptr) {
+  return (std::dynamic_pointer_cast<T>(ptr) != 0);
+}
 
 int main(int argc, char** argv) {
   if (argc < 2) {
@@ -55,16 +58,16 @@ int main(int argc, char** argv) {
 
   for (auto i = key_packets.begin(); i != key_packets.end(); i++) {
 
-    if (typeid(**i) == typeid(parse4880::PublicSubkeyPacket)) {
+    if (IsA<parse4880::PublicSubkeyPacket>(*i)) {
       subkey_ptr = std::dynamic_pointer_cast<parse4880::PublicSubkeyPacket>(*i);
     }
-    else if (typeid(**i) == typeid(parse4880::PublicKeyPacket)) {
+    else if (IsA<parse4880::PublicKeyPacket>(*i)) {
       key_ptr = std::dynamic_pointer_cast<parse4880::PublicKeyPacket>(*i);
     }
-    else if(typeid(**i) == typeid(parse4880::UserIDPacket)) {
+    else if (IsA<parse4880::UserIDPacket>(*i)) {
       uid_ptr = std::dynamic_pointer_cast<parse4880::UserIDPacket>(*i);
     }
-    else if(typeid(**i) == typeid(parse4880::SignaturePacket)) {
+    else if(IsA<parse4880::SignaturePacket>(*i)) {
       std::shared_ptr<parse4880::SignaturePacket> signature_ptr =
           std::dynamic_pointer_cast<parse4880::SignaturePacket>(*i);
 
