@@ -14,7 +14,7 @@
 #include "packet.h"
 #include "exceptions.h"
 #include "constants.h"
-#include "keys/rsakey.h"
+#include "keys/key.h"
 #include "packets/keymaterial.h"
 
 std::string read_file(std::string filename) {
@@ -89,9 +89,9 @@ int main(int argc, char** argv) {
     fprintf(stderr, "Found key: %s\n", key_ptr->str().c_str());
 
     try {
-      parse4880::RSAKey key(*key_ptr);
+      std::unique_ptr<parse4880::Key> key = parse4880::Key::ParseKey(*key_ptr);
       std::unique_ptr<parse4880::VerificationContext> ctx =
-          key.GetVerificationContext(*signature_packet);
+          key->GetVerificationContext(*signature_packet);
       ctx->Update(to_verify);
       fprintf(stderr, "Verification: %d\n", ctx->Verify());
     }

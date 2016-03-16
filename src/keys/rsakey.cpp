@@ -153,7 +153,7 @@ RSAKey::RSAKey(const PublicKeyPacket& rhs)
 RSAKey::~RSAKey() = default;
 
 std::unique_ptr<VerificationContext>
-RSAKey::GetVerificationContext(const SignaturePacket& signature) {
+RSAKey::GetVerificationContext(const SignaturePacket& signature) const {
   VerificationContext* ctx;
   switch (signature.hash_algorithm()) {
     case kHashSHA1:

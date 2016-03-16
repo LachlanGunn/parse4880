@@ -84,7 +84,18 @@ class Key {
    * @return A verification context.
    */
   virtual std::unique_ptr<VerificationContext>
-  GetVerificationContext(const SignaturePacket& signature) = 0;
+  GetVerificationContext(const SignaturePacket& signature) const = 0;
+
+ public:
+  /**
+   * Construct an algorithm-specific public-key object from a public
+   * key packet.
+   *
+   * @param packet  The packet that is to be parsed.
+   *
+   * @return A unique_ptr to the resulting key object.
+   */
+  static std::unique_ptr<Key> ParseKey(const PublicKeyPacket& packet);
 };
 
 }

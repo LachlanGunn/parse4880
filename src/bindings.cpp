@@ -14,8 +14,9 @@
 #include "packet.h"
 #include "exceptions.h"
 #include "constants.h"
-#include "keys/rsakey.h"
+#include "keys/key.h"
 #include "packets/keymaterial.h"
+#include "verify.h"
 
 std::string read_file(std::string filename) {
   std::ifstream file;
@@ -49,11 +50,15 @@ int main(int argc, char** argv) {
   }
 
   std::shared_ptr<parse4880::PublicKeyPacket> key_ptr = nullptr;
+  std::shared_ptr<parse4880::PublicSubkeyPacket> subkey_ptr = nullptr;
   std::shared_ptr<parse4880::UserIDPacket> uid_ptr = nullptr;
 
   for (auto i = key_packets.begin(); i != key_packets.end(); i++) {
 
-    if (typeid(**i) == typeid(parse4880::PublicKeyPacket)) {
+    if (typeid(**i) == typeid(parse4880::PublicSubkeyPacket)) {
+      subkey_ptr = std::dynamic_pointer_cast<parse4880::PublicSubkeyPacket>(*i);
+    }
+    else if (typeid(**i) == typeid(parse4880::PublicKeyPacket)) {
       key_ptr = std::dynamic_pointer_cast<parse4880::PublicKeyPacket>(*i);
     }
     else if(typeid(**i) == typeid(parse4880::UserIDPacket)) {
@@ -72,38 +77,44 @@ int main(int argc, char** argv) {
         case parse4880::kSignatureCertificationGeneric:
         case parse4880::kSignatureCertificationCasual:
         case parse4880::kSignatureCertificationPositive:
+          fprintf(stderr, "Certification by %s on\n\t%s\n\t%s\n",
+                  signature_ptr->str().c_str(),
+                  uid_ptr->str().c_str(),
+                  key_ptr->str().c_str());
+
+          try {
+            std::unique_ptr<parse4880::Key> key =
+                parse4880::Key::ParseKey(*key_ptr);
+
+            fprintf(stderr, "Verification: %d\n",
+                    parse4880::verify_uid_binding(*key_ptr, *uid_ptr,
+                                                  *key, *signature_ptr));
+
+          }
+          catch (parse4880::parse4880_error e) {
+            fprintf(stderr, "Error during verification:\n\t%s\n", e.what());
+            return 1;
+          }
           break;
+
+        case parse4880::kSignatureSubkeyBinding:
+          fprintf(stderr, "Subkey binding certification\n");
+          try {
+            fprintf(stderr, "Verification: %d\n",
+                    parse4880::verify_subkey_binding(*key_ptr, *subkey_ptr,
+                                                     *signature_ptr));
+
+          }
+          catch (parse4880::parse4880_error e) {
+            fprintf(stderr, "Error during verification:\n\t%s\n", e.what());
+            return 1;
+          }
+          break;
+
         default:
           continue;
       }
 
-
-      fprintf(stderr, "Certification by %s on\n\t%s\n\t%s\n",
-              signature_ptr->str().c_str(),
-              uid_ptr->str().c_str(),
-              key_ptr->str().c_str());
-
-      try {
-        parse4880::RSAKey key(*key_ptr);
-        std::unique_ptr<parse4880::VerificationContext> ctx =
-            key.GetVerificationContext(*signature_ptr);
-
-        uint8_t key_header[] = {0x99};
-        ctx->Update(key_header, sizeof(key_header));
-        ctx->Update(parse4880::WriteInteger(key_ptr->contents().length(), 2));
-        ctx->Update(key_ptr->contents());
-
-        uint8_t uid_header[] = {0xB4};
-        ctx->Update(uid_header, sizeof(uid_header));
-        ctx->Update(parse4880::WriteInteger(uid_ptr->contents().length(), 4));
-        ctx->Update(uid_ptr->contents());
-
-        fprintf(stderr, "Verification: %d\n", ctx->Verify());
-      }
-      catch (parse4880::parse4880_error e) {
-        fprintf(stderr, "Error during verification:\n\t%s\n", e.what());
-        return 1;
-      }
     }
     else {
       continue;

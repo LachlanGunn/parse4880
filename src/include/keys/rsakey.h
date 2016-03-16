@@ -30,7 +30,7 @@ class RSAKey : public Key {
   virtual ~RSAKey();
   
   virtual std::unique_ptr<VerificationContext> GetVerificationContext(
-      const SignaturePacket& Signature);
+      const SignaturePacket& Signature) const;
 
  private:
   class impl;

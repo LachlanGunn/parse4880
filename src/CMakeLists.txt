@@ -4,7 +4,8 @@ ADD_LIBRARY(parse4880
   parser.cpp packet.cpp exceptions.cpp
   packets/signature.cpp packets/unknownpacket.cpp packets/keymaterial.cpp
   packets/userid.cpp
-  keys/key.cpp keys/rsakey.cpp)
+  keys/key.cpp keys/rsakey.cpp
+  verifiers/uid_binding.cpp verifiers/subkey_binding.cpp)
 TARGET_LINK_LIBRARIES(parse4880 ${CRYPTOPP_LIBRARIES})
 
 ADD_EXECUTABLE(parsepgp main.cpp)
