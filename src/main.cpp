@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
   try {
     packets = parse4880::parse(str_stream.str());
   }
-  catch(parse4880::parse4880_error e) {
+  catch(const parse4880::parse4880_error& e) {
     fprintf(stderr, "Parse error:\n\t%s\n", e.what());
     return 1;
   }
