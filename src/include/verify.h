@@ -14,9 +14,16 @@ namespace parse4880 {
 bool verify_uid_binding(const PublicKeyPacket& key, const UserIDPacket& uid,
                         const Key& attester, const SignaturePacket& signature);
 
-bool verify_subkey_binding(const PublicKeyPacket&    key,
-                           const PublicSubkeyPacket& subkey,
-                           const SignaturePacket&    signature);
+/**
+ * Verify a key-to-subkey binding.
+ *
+ * @return 0 if verification failed,
+ *         1 if the subkey binding was verified,
+ *         2 if the subkey and a primary-key binding were verified.
+ */
+int verify_subkey_binding(const PublicKeyPacket&    key,
+                          const PublicSubkeyPacket& subkey,
+                          const SignaturePacket&    signature);
 
 }  // namespace parse4880
 
