@@ -6,10 +6,6 @@
 #include <list>
 #include <memory>
 
-#include <cryptopp/sha.h>
-#include <cryptopp/rsa.h>
-#include <cryptopp/osrng.h>
-
 #include "parser.h"
 #include "packet.h"
 #include "exceptions.h"

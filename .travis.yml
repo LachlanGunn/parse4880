@@ -5,7 +5,8 @@ addons:
   apt:
     packages:
     - libboost-dev
-    - libcrypto++-dev
+    - libmbedtls-dev
+    - libmbedcrypto0
 
 language: cpp
 compiler:

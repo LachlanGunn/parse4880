@@ -6,7 +6,7 @@ ADD_LIBRARY(parse4880
   packets/userid.cpp
   keys/key.cpp keys/rsakey.cpp
   verifiers/uid_binding.cpp verifiers/subkey_binding.cpp)
-TARGET_LINK_LIBRARIES(parse4880 ${CRYPTOPP_LIBRARIES})
+TARGET_LINK_LIBRARIES(parse4880 ${MBEDCRYPTO_LIBRARIES})
 
 ADD_EXECUTABLE(parsepgp main.cpp)
 TARGET_LINK_LIBRARIES(parsepgp parse4880)

@@ -1,6 +1,10 @@
+#include <assert.h>
+
 #include <string>
 
-#include <cryptopp/rsa.h>
+#include <mbedtls/bignum.h>
+#include <mbedtls/md.h>
+#include <mbedtls/rsa.h>
 
 #include "parser.h"
 #include "constants.h"
@@ -20,7 +24,7 @@ namespace parse4880 {
  */
 class RSAKey::impl {
  public:
-  CryptoPP::RSAFunction public_transformation;
+  mbedtls_rsa_context rsa_context;
 };
 
 namespace {
@@ -30,10 +34,10 @@ namespace {
  *
  * @see VerificationContext
  */
-template <class Hash>
+template <mbedtls_md_type_t hash_id>
 class RSAVerificationContext : public VerificationContext {
  public:
-  explicit RSAVerificationContext(const CryptoPP::RSAFunction& public_key,
+  explicit RSAVerificationContext(const mbedtls_rsa_context& public_key,
                                   const SignaturePacket& signature);
   virtual ~RSAVerificationContext();
 
@@ -43,8 +47,8 @@ class RSAVerificationContext : public VerificationContext {
 
  private:
   SignaturePacket signature_;
-  typename CryptoPP::RSASS<CryptoPP::PKCS1v15, Hash>::Verifier verifier_;
-  CryptoPP::PK_MessageAccumulator* accumulator_;
+  mbedtls_md_context_t hash_ctx_;
+  mbedtls_rsa_context public_key_;
 };
 
 /**
@@ -55,11 +59,11 @@ class RSAVerificationContext : public VerificationContext {
  * algorithm-dependent.  This function parses this part into a Crypto++
  * RSAFunction object from which we may create a verifier.
  *
- * @param key_material  The public key to be parsed.
- *
- * @return An RSAFunction corresponding to the encoded exponent and modulus.
+ * @param key_material    The public key to be parsed.
+ * @param public_key_ctx  The public key context to be initialised.
  */
-CryptoPP::RSAFunction ReadRSAPublicKey(std::string key_material) {
+void ReadRSAPublicKey(std::string key_material,
+                      mbedtls_rsa_context* public_key) {
   /*
    * The public key format is simply two multiprecision integers.
    * We start by making sure that there is a length field...
@@ -77,10 +81,17 @@ CryptoPP::RSAFunction ReadRSAPublicKey(std::string key_material) {
   }
 
   // First comes the modulus.  We extract and decode it.
-  CryptoPP::Integer modulus;
-  modulus.OpenPGPDecode(reinterpret_cast<const uint8_t*>(
-      key_material.substr(0, 2+modulus_length).c_str()), 2+modulus_length);
+  const std::string modulus_encoded = key_material.substr(2, modulus_length);
+  assert(modulus_encoded.length() == modulus_length);
+  mbedtls_mpi_read_binary(
+      &public_key->N,
+      reinterpret_cast<const uint8_t*>(modulus_encoded.c_str()),
+      modulus_length);
 
+  // We need to set the key length too.
+  public_key->len = modulus_length;
+
+  // Now the exponent.  We have already checked that the header is there.
   size_t exponent_length = parse4880::ReadInteger(
       key_material.substr(2+modulus_length,2));
   exponent_length = ((exponent_length +7) / 8);
@@ -88,42 +99,48 @@ CryptoPP::RSAFunction ReadRSAPublicKey(std::string key_material) {
     throw parse4880::invalid_header_error(-1);
   }
 
-  CryptoPP::Integer exponent;
-  exponent.OpenPGPDecode(reinterpret_cast<const uint8_t*>(
-      key_material.substr(2+modulus_length, 2+exponent_length).c_str()),
-                        2+exponent_length);
+  const std::string exponent_encoded =
+      key_material.substr(4+modulus_length, exponent_length);
+  assert(exponent_encoded.length() == exponent_length);
+  mbedtls_mpi_read_binary(
+      &public_key->E,
+      reinterpret_cast<const uint8_t*>(exponent_encoded.c_str()),
+      exponent_length);
 
-  CryptoPP::RSAFunction pk;
-  pk.Initialize(modulus, exponent);
-  return pk;
 }
 
-template <class Hash>
-RSAVerificationContext<Hash>::RSAVerificationContext(
-    const CryptoPP::RSAFunction& public_key,
+template <mbedtls_md_type_t hash_id>
+RSAVerificationContext<hash_id>::RSAVerificationContext(
+    const mbedtls_rsa_context& public_key,
     const SignaturePacket& signature)
-    : signature_(signature),
-      verifier_(public_key),
-      accumulator_(verifier_.NewVerificationAccumulator()) {
+    : signature_(signature) {
+
+  mbedtls_md_init(&hash_ctx_);
+  mbedtls_md_setup(&hash_ctx_, mbedtls_md_info_from_type(hash_id), 0);
+  mbedtls_md_starts(&hash_ctx_);
+
+  mbedtls_rsa_init(&public_key_, MBEDTLS_RSA_PKCS_V15, 0);
+  mbedtls_rsa_copy(&public_key_, &public_key);
 }
 
-template <class Hash>
-RSAVerificationContext<Hash>::~RSAVerificationContext() {
-  delete accumulator_;
+template <mbedtls_md_type_t hash_id>
+RSAVerificationContext<hash_id>::~RSAVerificationContext() {
+  mbedtls_md_free(&hash_ctx_);
 }
 
-template <class Hash>
-void RSAVerificationContext<Hash>::Update(const uint8_t* data, std::size_t len) {
-  accumulator_->Update(data, len);
+template <mbedtls_md_type_t hash_id>
+void RSAVerificationContext<hash_id>::Update(const uint8_t* data,
+                                             std::size_t len) {
+  mbedtls_md_update(&hash_ctx_, data, len);
 }
 
-template <class Hash>
-void RSAVerificationContext<Hash>::Update(const std::string& data) {
+template <mbedtls_md_type_t hash_id>
+void RSAVerificationContext<hash_id>::Update(const std::string& data) {
   Update(reinterpret_cast<const uint8_t*>(data.c_str()), data.length());
 }
 
-template <class Hash>
-bool RSAVerificationContext<Hash>::Verify() {
+template <mbedtls_md_type_t hash_id>
+bool RSAVerificationContext<hash_id>::Verify() {
   Update(signature_.hashed_data());
 
   if (4 == signature_.version()) {
@@ -132,11 +149,25 @@ bool RSAVerificationContext<Hash>::Verify() {
     Update(WriteInteger(signature_.hashed_data().length(), 4));
   }
 
-  verifier_.InputSignature(*accumulator_,
-                           reinterpret_cast<const uint8_t*>(
-                               signature_.signature().substr(2).c_str()),
-                           signature_.signature().length() - 2);
-  return verifier_.VerifyAndRestart(*accumulator_);
+  uint8_t hash_size = mbedtls_md_get_size(mbedtls_md_info_from_type(hash_id));
+  std::unique_ptr<uint8_t> hash(new uint8_t[hash_size]);
+  mbedtls_md_finish(&hash_ctx_, hash.get());
+  mbedtls_md_free(&hash_ctx_);
+
+  // Extract the signature itself from the packet.
+  std::string signature = signature_.signature().substr(2);
+
+  // MbedTLS requires that the signature have the same length as
+  // the key, so we pad it with zeros if it is less.
+  signature = std::string('\0', public_key_.len - signature.length())
+      + signature;
+
+  int result = mbedtls_rsa_rsassa_pkcs1_v15_verify(
+      &public_key_, NULL, NULL, MBEDTLS_RSA_PUBLIC, hash_id, hash_size,
+      hash.get(),
+      reinterpret_cast<const uint8_t*>(signature.c_str()));
+
+  return (result == 0);
 }
 
 }
@@ -147,7 +178,8 @@ RSAKey::RSAKey(const PublicKeyPacket& rhs)
     throw wrong_algorithm_error();
   }
 
-  impl_->public_transformation = ReadRSAPublicKey(rhs.key_material());
+  mbedtls_rsa_init(&impl_->rsa_context, MBEDTLS_RSA_PKCS_V15, 0);
+  ReadRSAPublicKey(rhs.key_material(), &(impl_->rsa_context));
 }
 
 RSAKey::~RSAKey() = default;
@@ -157,24 +189,24 @@ RSAKey::GetVerificationContext(const SignaturePacket& signature) const {
   VerificationContext* ctx;
   switch (signature.hash_algorithm()) {
     case kHashSHA1:
-      ctx = new RSAVerificationContext<CryptoPP::SHA1>(
-          impl_->public_transformation, signature);
+      ctx = new RSAVerificationContext<MBEDTLS_MD_SHA1>(
+          impl_->rsa_context, signature);
       break;
     case kHashSHA224:
-      ctx = new RSAVerificationContext<CryptoPP::SHA224>(
-          impl_->public_transformation, signature);
+      ctx = new RSAVerificationContext<MBEDTLS_MD_SHA224>(
+          impl_->rsa_context, signature);
       break;
     case kHashSHA256:
-      ctx = new RSAVerificationContext<CryptoPP::SHA256>(
-          impl_->public_transformation, signature);
+      ctx = new RSAVerificationContext<MBEDTLS_MD_SHA256>(
+          impl_->rsa_context, signature);
       break;
     case kHashSHA384:
-      ctx = new RSAVerificationContext<CryptoPP::SHA384>(
-          impl_->public_transformation, signature);
+      ctx = new RSAVerificationContext<MBEDTLS_MD_SHA384>(
+          impl_->rsa_context, signature);
       break;
     case kHashSHA512:
-      ctx = new RSAVerificationContext<CryptoPP::SHA512>(
-          impl_->public_transformation, signature);
+      ctx = new RSAVerificationContext<MBEDTLS_MD_SHA512>(
+          impl_->rsa_context, signature);
       break;
     default:
       throw unsupported_feature_error(-1, "Unsupported hash function.");

@@ -1,10 +1,9 @@
 #include <stdlib.h>
+#include <memory.h>
 
 #include <string>
 
-#include <cryptopp/sha.h>
-#include <cryptopp/filters.h>
-#include <cryptopp/hex.h>
+#include <mbedtls/md.h>
 
 #include <boost/format.hpp>
 
@@ -64,18 +63,24 @@ PublicKeyPacket::PublicKeyPacket(const std::string& data)
    *   2. A two-octet length of of the packet.
    *   3. The entirety of the packet data.
    */
-  CryptoPP::SHA1 sha1;
-  sha1.Update(reinterpret_cast<const unsigned char*>("\x99"), 1);
-  sha1.Update(reinterpret_cast<const unsigned char*>(
+  mbedtls_md_context_t md_ctx;
+  const mbedtls_md_info_t* md_type = mbedtls_md_info_from_type(MBEDTLS_MD_SHA1);
+  mbedtls_md_init(&md_ctx);
+  mbedtls_md_setup(&md_ctx, md_type, 0);
+  mbedtls_md_starts(&md_ctx);
+
+  mbedtls_md_update(&md_ctx, reinterpret_cast<const unsigned char*>("\x99"), 1);
+  mbedtls_md_update(&md_ctx, reinterpret_cast<const unsigned char*>(
       WriteInteger(data.length(),2).c_str()), 2);
-  sha1.Update(reinterpret_cast<const unsigned char*>(data.c_str()),
+  mbedtls_md_update(&md_ctx, reinterpret_cast<const unsigned char*>(data.c_str()),
               data.length());
 
-  char digest[CryptoPP::SHA1::DIGESTSIZE]; // Flawfinder: ignore (known length)
-  memset(digest, '\0', CryptoPP::SHA1::DIGESTSIZE);
-  sha1.Final(reinterpret_cast<unsigned char*>(digest));
+  size_t digest_length = mbedtls_md_get_size(md_type);
+  std::unique_ptr<char> digest(new char[digest_length]);
+  memset(digest.get(), '\0', digest_length);
+  mbedtls_md_finish(&md_ctx, reinterpret_cast<unsigned char*>(digest.get()));
 
-  fingerprint_ = std::string(digest, CryptoPP::SHA1::DIGESTSIZE);
+  fingerprint_ = std::string(digest.get(), digest_length);
 }
 
 uint8_t PublicKeyPacket::tag() const {
