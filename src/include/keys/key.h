@@ -86,6 +86,8 @@ class Key {
   virtual std::unique_ptr<VerificationContext>
   GetVerificationContext(const SignaturePacket& signature) const = 0;
 
+  virtual ~Key();
+
  public:
   /**
    * Construct an algorithm-specific public-key object from a public

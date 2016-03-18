@@ -126,6 +126,7 @@ RSAVerificationContext<hash_id>::RSAVerificationContext(
 template <mbedtls_md_type_t hash_id>
 RSAVerificationContext<hash_id>::~RSAVerificationContext() {
   mbedtls_md_free(&hash_ctx_);
+  mbedtls_rsa_free(&public_key_);
 }
 
 template <mbedtls_md_type_t hash_id>
@@ -150,7 +151,7 @@ bool RSAVerificationContext<hash_id>::Verify() {
   }
 
   uint8_t hash_size = mbedtls_md_get_size(mbedtls_md_info_from_type(hash_id));
-  std::unique_ptr<uint8_t> hash(new uint8_t[hash_size]);
+  std::unique_ptr<uint8_t[]> hash(new uint8_t[hash_size]);
   mbedtls_md_finish(&hash_ctx_, hash.get());
   mbedtls_md_free(&hash_ctx_);
 
@@ -182,7 +183,9 @@ RSAKey::RSAKey(const PublicKeyPacket& rhs)
   ReadRSAPublicKey(rhs.key_material(), &(impl_->rsa_context));
 }
 
-RSAKey::~RSAKey() = default;
+RSAKey::~RSAKey() {
+  mbedtls_rsa_free(&impl_->rsa_context);
+}
 
 std::unique_ptr<VerificationContext>
 RSAKey::GetVerificationContext(const SignaturePacket& signature) const {

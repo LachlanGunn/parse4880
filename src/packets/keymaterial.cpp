@@ -76,9 +76,10 @@ PublicKeyPacket::PublicKeyPacket(const std::string& data)
               data.length());
 
   size_t digest_length = mbedtls_md_get_size(md_type);
-  std::unique_ptr<char> digest(new char[digest_length]);
+  std::unique_ptr<char[]> digest(new char[digest_length]);
   memset(digest.get(), '\0', digest_length);
   mbedtls_md_finish(&md_ctx, reinterpret_cast<unsigned char*>(digest.get()));
+  mbedtls_md_free(&md_ctx);
 
   fingerprint_ = std::string(digest.get(), digest_length);
 }

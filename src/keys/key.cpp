@@ -10,6 +10,12 @@ namespace parse4880 {
 VerificationContext::~VerificationContext() {
 }
 
+/**
+ * Virtual destructor. Do nothing.
+ */
+Key::~Key() {
+}
+
 std::unique_ptr<Key> Key::ParseKey(const PublicKeyPacket& packet) {
   switch (packet.public_key_algorithm()) {
     case kPublicKeyRSAEncryptOrSign:
