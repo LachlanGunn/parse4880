@@ -131,12 +131,10 @@ uint8_t SignaturePacket::tag() const {
 
 std::string SignaturePacket::str() const {
   char uid_string[17]; // Flawfinder: ignore (uids have known length)
-  const unsigned char* unsigned_key_id =
-      reinterpret_cast<const unsigned char*>(key_id_.c_str());
   snprintf(uid_string, 17, "%02x%02x%02x%02x%02x%02x%02x%02x",
-           unsigned_key_id[0], unsigned_key_id[1], unsigned_key_id[2],
-           unsigned_key_id[3], unsigned_key_id[4], unsigned_key_id[5],
-           unsigned_key_id[6], unsigned_key_id[7]);
+           key_id_[0], key_id_[1], key_id_[2],
+           key_id_[3], key_id_[4], key_id_[5],
+           key_id_[6], key_id_[7]);
   return (boost::format("Signature, version %d, type 0x%02x, "
                         "uid %s")
           % static_cast<int>(version_)

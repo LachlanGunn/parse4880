@@ -71,7 +71,7 @@ PublicKeyPacket::PublicKeyPacket(const ustring& data)
   mbedtls_md_starts(&md_ctx);
 
   mbedtls_md_update(&md_ctx, reinterpret_cast<const unsigned char*>("\x99"), 1);
-  mbedtls_md_update(&md_ctx, WriteInteger(data.length(),2).c_str()), 2);
+  mbedtls_md_update(&md_ctx, WriteInteger(data.length(),2).c_str(), 2);
   mbedtls_md_update(&md_ctx, data.c_str(), data.length());
 
   size_t digest_length = mbedtls_md_get_size(md_type);
