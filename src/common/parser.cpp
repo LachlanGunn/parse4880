@@ -135,9 +135,8 @@ struct find_length_result find_length_old(const ustring& data,
 uint64_t ReadInteger(ustring encoded_integer) {
   uint64_t parsed_integer = 0;
   for (size_t i = 0; i < encoded_integer.length(); i++) {
-    parsed_integer +=
-        (uint8_t)(encoded_integer[i])
-        << ( 8*(encoded_integer.length() - i - 1) );
+    parsed_integer <<= 8;
+    parsed_integer += encoded_integer.at(i);
   }
   return parsed_integer;
 }

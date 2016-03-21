@@ -25,6 +25,10 @@ IF(NOT MBEDCRYPTO_LIBRARIES)
   MESSAGE(SEND_ERROR "Could not find MbedCrypto")
 ENDIF(NOT MBEDCRYPTO_LIBRARIES)
 
+# GTest
+# FIXME: This should be more portable
+SUBDIRS(/usr/src/gtest)
+
 # Doxygen
 FIND_PACKAGE(Doxygen)
 IF(DOXYGEN_FOUND)

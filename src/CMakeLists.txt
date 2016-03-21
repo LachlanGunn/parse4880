@@ -16,3 +16,6 @@ TARGET_LINK_LIBRARIES(verify parse4880)
 
 ADD_EXECUTABLE(bindings applications/bindings.cpp)
 TARGET_LINK_LIBRARIES(bindings parse4880)
+
+ADD_EXECUTABLE(runtests tests/integers.cpp)
+TARGET_LINK_LIBRARIES(runtests parse4880 gtest_main)
