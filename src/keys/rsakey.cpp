@@ -70,7 +70,7 @@ void ReadRSAPublicKey(ustring key_material,
    * We start by making sure that there is a length field...
    */
   if (key_material.length() < 2) {
-    throw parse4880::invalid_header_error(-1);
+    throw parse4880::invalid_packet_error("Packet too short to be RSA key");
   }
 
   // Then we read it and check that there are enough bits in the string.
@@ -78,7 +78,7 @@ void ReadRSAPublicKey(ustring key_material,
 
   modulus_length = ((modulus_length+7) / 8);
   if (key_material.length() < 4 + modulus_length) {
-    throw parse4880::invalid_header_error(-1);
+    throw parse4880::invalid_packet_error("Packet too short for RSA modulus");
   }
 
   // First comes the modulus.  We extract and decode it.
@@ -86,7 +86,7 @@ void ReadRSAPublicKey(ustring key_material,
   assert(modulus_encoded.length() == modulus_length);
   mbedtls_mpi_read_binary(
       &public_key->N,
-      reinterpret_cast<const uint8_t*>(modulus_encoded.c_str()),
+      modulus_encoded.c_str(),
       modulus_length);
 
   // We need to set the key length too.
@@ -97,7 +97,7 @@ void ReadRSAPublicKey(ustring key_material,
       key_material.substr(2+modulus_length,2));
   exponent_length = ((exponent_length +7) / 8);
   if (key_material.length() < 4 + modulus_length + exponent_length) {
-    throw parse4880::invalid_header_error(-1);
+    throw parse4880::invalid_packet_error("Packet too short for RSA exponent");
   }
 
   const ustring exponent_encoded =
