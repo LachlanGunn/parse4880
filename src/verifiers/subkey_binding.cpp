@@ -14,7 +14,7 @@ namespace parse4880 {
 namespace {
 
 void UpdateContextWithKey(VerificationContext& ctx, const PublicKeyPacket& key) {
-  ctx.Update("\x99");
+  ctx.Update((uint8_t*)"\x99");
   ctx.Update(WriteInteger(key.contents().length(), 2));
   ctx.Update(key.contents());
 }

@@ -6,6 +6,7 @@
 #include <list>
 #include <memory>
 
+#include "parser_types.h"
 #include "parser.h"
 #include "packet.h"
 #include "exceptions.h"
@@ -24,7 +25,9 @@ std::string read_file(std::string filename) {
 }
                       
 std::list<std::shared_ptr<parse4880::PGPPacket>> parse_file(std::string file) {
-  return parse4880::parse(read_file(file));
+  std::string file_contents = read_file(file);
+  return parse4880::parse(parse4880::ustring(file_contents.begin(),
+                                             file_contents.end()));
 }
 
 
@@ -88,7 +91,7 @@ int main(int argc, char** argv) {
       std::unique_ptr<parse4880::Key> key = parse4880::Key::ParseKey(*key_ptr);
       std::unique_ptr<parse4880::VerificationContext> ctx =
           key->GetVerificationContext(*signature_packet);
-      ctx->Update(to_verify);
+      ctx->Update(parse4880::ustring(to_verify.begin(), to_verify.end()));
       fprintf(stderr, "Verification: %d\n", ctx->Verify());
     }
     catch (parse4880::parse4880_error e) {

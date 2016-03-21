@@ -7,6 +7,8 @@
  * User ID packet class.
  */
 
+#include "parser_types.h"
+
 namespace parse4880 {
 
 /**
@@ -19,7 +21,7 @@ class UserIDPacket : public PGPPacket {
    *
    * @param contents  The packet data to parse.
    */
-  UserIDPacket(std::string contents);
+  UserIDPacket(ustring contents);
   
   virtual uint8_t tag() const;
   virtual std::string str() const;
@@ -29,10 +31,10 @@ class UserIDPacket : public PGPPacket {
    *
    * @return A string containing the user-id.
    */
-  const std::string& user_id() const;
+  std::string user_id() const;
 
  private:
-  std::string user_id_;
+  ustring user_id_;
 };
 
 }

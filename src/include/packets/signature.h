@@ -10,6 +10,7 @@
 #include <list>
 #include <memory>
 
+#include "parser_types.h"
 #include "packet.h"
 
 namespace parse4880 {
@@ -24,7 +25,7 @@ class SignaturePacket : public PGPPacket {
    *
    * @param packet_data  Packet data to parse.
    */
-  explicit SignaturePacket(std::string packet_data);
+  explicit SignaturePacket(ustring packet_data);
 
   virtual uint8_t tag() const;
   virtual std::string str() const;
@@ -41,7 +42,7 @@ class SignaturePacket : public PGPPacket {
    *
    * @return A string containing the long key-id in binary form.
    */
-  const std::string& key_id() const;
+  const ustring& key_id() const;
 
   /**
    * The type of the signature.
@@ -72,14 +73,14 @@ class SignaturePacket : public PGPPacket {
    *
    * @return A string containing the raw subpackets.
    */
-  const std::string& hashed_subpacket_data() const;
+  const ustring& hashed_subpacket_data() const;
 
   /**
    * The raw subpacket data that is not to be hashed.
    *
    * @return A string containing the raw subpackets.
    */
-  const std::string& unhashed_subpacket_data() const;
+  const ustring& unhashed_subpacket_data() const;
 
   /**
    * The left sixteen bits of the hash, for quick verification.
@@ -93,7 +94,7 @@ class SignaturePacket : public PGPPacket {
    *
    * @return A string containing the raw signature data.
    */
-  const std::string& signature() const;
+  const ustring& signature() const;
 
   /**
    * The entirety of the hashed data from the signature packet.
@@ -108,22 +109,22 @@ class SignaturePacket : public PGPPacket {
    * @return A string to be appended to the data being verified before
    *         it is hashed.
    */
-  const std::string& hashed_data() const;
+  const ustring& hashed_data() const;
 
  private:
   void SetSignaturePropertiesFromSubpackets();
 
  private:
   uint8_t version_;
-  std::string key_id_;
+  ustring key_id_;
   uint8_t signature_type_;
   uint8_t public_key_algorithm_;
   uint8_t hash_algorithm_;
-  std::string hashed_subpacket_data_;
-  std::string unhashed_subpacket_data_;
+  ustring hashed_subpacket_data_;
+  ustring unhashed_subpacket_data_;
   uint8_t hash_left_16bits_[2];
-  std::string signature_;
-  std::string hashed_data_;
+  ustring signature_;
+  ustring hashed_data_;
 };
 
 }

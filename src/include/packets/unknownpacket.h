@@ -7,6 +7,8 @@
  * Miscellaneous packet class.
  */
 
+#include "parser_types.h"
+
 namespace parse4880 {
 
 /**
@@ -20,7 +22,7 @@ class UnknownPGPPacket : public PGPPacket {
    * @param tag       The packet type code.
    * @param contents  The contents of the packet.
    */
-  UnknownPGPPacket(uint8_t tag, std::string contents);
+  UnknownPGPPacket(uint8_t tag, ustring contents);
   
   virtual uint8_t tag() const;
   virtual std::string str() const;

@@ -12,11 +12,11 @@ bool verify_uid_binding(const PublicKeyPacket& key, const UserIDPacket& uid,
   std::unique_ptr<VerificationContext> ctx =
       attester.GetVerificationContext(signature);
 
-  ctx->Update("\x99");
+  ctx->Update((uint8_t*)"\x99");
   ctx->Update(WriteInteger(key.contents().length(), 2));
   ctx->Update(key.contents());
   
-  ctx->Update("\xB4");
+  ctx->Update((uint8_t*)"\xB4");
   ctx->Update(WriteInteger(uid.contents().length(), 4));
   ctx->Update(uid.contents());
 

@@ -7,6 +7,8 @@
  * Generic PGP packet type.
  */
 
+#include "parser_types.h"
+
 namespace parse4880 {
 
 /**
@@ -24,7 +26,7 @@ class PGPPacket {
    *
    * @param contents  The contents of the packet.
    */
-  PGPPacket(std::string contents);
+  PGPPacket(ustring contents);
 
   /**
    * Get a list of subpackets.
@@ -52,7 +54,7 @@ class PGPPacket {
    *
    * @return The packet contents.
    */
-  const std::string& contents() const;
+  const ustring& contents() const;
 
  protected:
   /**
@@ -61,7 +63,7 @@ class PGPPacket {
   std::list<std::shared_ptr<PGPPacket>> subpackets_;
 
  private:
-  std::string contents_;
+  ustring contents_;
 
  public:
   /**
@@ -71,7 +73,7 @@ class PGPPacket {
    * @param packet  The raw packet data to be parsed.
    */
   static std::shared_ptr<PGPPacket> ParsePacket(uint8_t tag,
-                                                std::string packet);
+                                                ustring packet);
 };
 
 }

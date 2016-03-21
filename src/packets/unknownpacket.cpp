@@ -4,13 +4,14 @@
 
 #include "boost/format.hpp"
 
+#include "parser_types.h"
 #include "packet.h"
 #include "exceptions.h"
 #include "parser.h"
 
 namespace parse4880 {
 
-UnknownPGPPacket::UnknownPGPPacket(uint8_t tag, std::string contents)
+UnknownPGPPacket::UnknownPGPPacket(uint8_t tag, ustring contents)
     : PGPPacket(contents), tag_(tag) {}
 
 uint8_t UnknownPGPPacket::tag() const {

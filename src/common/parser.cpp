@@ -5,6 +5,7 @@
 #include <memory>
 #include <stdexcept>
 
+#include "parser_types.h"
 #include "parser.h"
 #include "exceptions.h"
 
@@ -34,7 +35,7 @@ struct find_length_result {
  *
  * @todo Deal with partial-length records.
  */
-struct find_length_result find_length_new(const std::string& string_data,
+struct find_length_result find_length_new(const ustring& string_data,
                                           size_t field_position,
                                           bool allow_partial) {
   struct find_length_result result;
@@ -106,7 +107,7 @@ struct find_length_result find_length_new(const std::string& string_data,
  * The exception to this is where N=3.  Then, the packet
  * continues until the end of of the data.
  */
-struct find_length_result find_length_old(const std::string& data,
+struct find_length_result find_length_old(const ustring& data,
                                           size_t field_position,
                                           int length_type) {
   struct find_length_result result;
@@ -131,7 +132,7 @@ struct find_length_result find_length_old(const std::string& data,
 
 }
 
-uint64_t ReadInteger(std::string encoded_integer) {
+uint64_t ReadInteger(ustring encoded_integer) {
   uint64_t parsed_integer = 0;
   for (size_t i = 0; i < encoded_integer.length(); i++) {
     parsed_integer +=
@@ -141,16 +142,16 @@ uint64_t ReadInteger(std::string encoded_integer) {
   return parsed_integer;
 }
 
-std::string WriteInteger(uint64_t value, uint8_t length) {
-  std::string result((size_t)length, ' ');
+ustring WriteInteger(uint64_t value, uint8_t length) {
+  ustring result((size_t)length, '\x00');
   for (int i = length-1; i >= 0; i--) {
-    result[i] = value & 0xFF;
+    result[i] = (uint8_t)(value & 0xFF);
     value >>= 8;
   }
   return result;
 }
 
-std::list<std::shared_ptr<PGPPacket>> parse(std::string data) {
+std::list<std::shared_ptr<PGPPacket>> parse(ustring data) {
   std::list<std::shared_ptr<PGPPacket>> parsed_packets;
       
   size_t packet_start_position = 0;
@@ -229,7 +230,7 @@ std::list<std::shared_ptr<PGPPacket>> parse(std::string data) {
   return parsed_packets;
 }
 
-std::list<std::shared_ptr<PGPPacket>> parse_subpackets(std::string data) {
+std::list<std::shared_ptr<PGPPacket>> parse_subpackets(ustring data) {
   std::list<std::shared_ptr<PGPPacket>> subpackets;
   for (size_t packet_start_position = 0; packet_start_position < data.length();) {
     // First we need to extract the packet length.  This is a new-style

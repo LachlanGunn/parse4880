@@ -36,7 +36,9 @@ int main(int argc, char** argv) {
 
   std::list<std::shared_ptr<parse4880::PGPPacket>> packets;
   try {
-    packets = parse4880::parse(str_stream.str());
+    std::string file_contents = str_stream.str();
+    packets = parse4880::parse(
+        parse4880::ustring(file_contents.begin(), file_contents.end()));
   }
   catch(const parse4880::parse4880_error& e) {
     fprintf(stderr, "Parse error:\n\t%s\n", e.what());

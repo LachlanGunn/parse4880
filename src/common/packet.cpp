@@ -6,17 +6,18 @@
 
 #include "boost/format.hpp"
 
+#include "parser_types.h"
 #include "packet.h"
 #include "exceptions.h"
 #include "parser.h"
 
 namespace parse4880 {
 
-PGPPacket::PGPPacket(std::string contents) : contents_(contents) {
+PGPPacket::PGPPacket(ustring contents) : contents_(contents) {
 }
 
 std::shared_ptr<PGPPacket> PGPPacket::ParsePacket(uint8_t tag,
-                                                  std::string packet) {
+                                                  ustring packet) {
   try {
     switch (tag) {
       case 2:
@@ -39,7 +40,7 @@ const std::list<std::shared_ptr<PGPPacket>>& PGPPacket::subpackets() const {
   return subpackets_;
 }
 
-const std::string& PGPPacket::contents() const {
+const ustring& PGPPacket::contents() const {
   return contents_;
 }
 

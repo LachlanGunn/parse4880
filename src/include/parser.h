@@ -12,6 +12,7 @@
 #include <string>
 
 #include "packet.h"
+#include "parser_types.h"
 
 /**
  * Namespace for all library functionality.
@@ -34,7 +35,7 @@ namespace parse4880 {
  * @see PGPPacket
  * @see parse4880::parse_subpackets()
  */
-std::list<std::shared_ptr<PGPPacket>> parse(std::string data);
+std::list<std::shared_ptr<PGPPacket>> parse(ustring data);
 
 /**
  * Parse a series of signature subpackets.
@@ -62,7 +63,7 @@ std::list<std::shared_ptr<PGPPacket>> parse(std::string data);
  *
  * @see parse4880::parse()
  */
-std::list<std::shared_ptr<PGPPacket>> parse_subpackets(std::string data);
+std::list<std::shared_ptr<PGPPacket>> parse_subpackets(ustring data);
 
 /**
  * Read a PGP normal integer.
@@ -71,7 +72,7 @@ std::list<std::shared_ptr<PGPPacket>> parse_subpackets(std::string data);
  *
  * @return The integer value contained in the encoded string.
  */
-uint64_t    ReadInteger(std::string encoded_integer);
+uint64_t    ReadInteger(ustring encoded_integer);
 
 /**
  * Encode an integer into PGP format.
@@ -81,7 +82,7 @@ uint64_t    ReadInteger(std::string encoded_integer);
  *
  * @return The encoded form of the provided integer.
  */
-std::string WriteInteger(uint64_t value, uint8_t length);
+ustring WriteInteger(uint64_t value, uint8_t length);
 
 }
 

@@ -7,13 +7,14 @@
 
 #include <boost/format.hpp>
 
+#include "parser_types.h"
 #include "exceptions.h"
 #include "parser.h"
 #include "packet.h"
 
 namespace parse4880 {
 
-KeyMaterialPacket::KeyMaterialPacket(std::string content)
+KeyMaterialPacket::KeyMaterialPacket(ustring content)
     : PGPPacket(content) {
 }
 
@@ -29,7 +30,7 @@ uint8_t KeyMaterialPacket::public_key_algorithm() const {
   return public_key_algorithm_;
 }
 
-PublicKeyPacket::PublicKeyPacket(const std::string& data)
+PublicKeyPacket::PublicKeyPacket(const ustring& data)
     : KeyMaterialPacket(data) {
   /*
    * A public key packet contains the following:
@@ -76,12 +77,12 @@ PublicKeyPacket::PublicKeyPacket(const std::string& data)
               data.length());
 
   size_t digest_length = mbedtls_md_get_size(md_type);
-  std::unique_ptr<char[]> digest(new char[digest_length]);
+  std::unique_ptr<uint8_t[]> digest(new uint8_t[digest_length]);
   memset(digest.get(), '\0', digest_length);
   mbedtls_md_finish(&md_ctx, reinterpret_cast<unsigned char*>(digest.get()));
   mbedtls_md_free(&md_ctx);
 
-  fingerprint_ = std::string(digest.get(), digest_length);
+  fingerprint_ = ustring(digest.get(), digest_length);
 }
 
 uint8_t PublicKeyPacket::tag() const {
@@ -89,24 +90,25 @@ uint8_t PublicKeyPacket::tag() const {
 }
 
 std::string PublicKeyPacket::str() const {
-  const std::string& key_fingerprint = fingerprint();
+  const ustring& key_fingerprint = fingerprint();
   char key_id[41]; // Flawfinder: ignore (fingerprints have known length)
   for(int i = 0; i < 20; i+=1) {
     snprintf(key_id+i*2, 3, "%02X",
              static_cast<unsigned char>(key_fingerprint[i]));
   }
-  return (boost::format("Public key: %s") % key_id).str();
+  return (boost::format("Public key: %s")
+          % key_id).str();
 }
 
-const std::string& PublicKeyPacket::fingerprint() const {
+const ustring& PublicKeyPacket::fingerprint() const {
   return fingerprint_;
 }
 
-const std::string& PublicKeyPacket::key_material() const {
+const ustring& PublicKeyPacket::key_material() const {
   return key_material_;
 }
 
-PublicSubkeyPacket::PublicSubkeyPacket(std::string contents)
+PublicSubkeyPacket::PublicSubkeyPacket(ustring contents)
     : PublicKeyPacket(contents) {}
 
 uint8_t PublicSubkeyPacket::tag() const {
@@ -114,7 +116,7 @@ uint8_t PublicSubkeyPacket::tag() const {
 }
 
 std::string PublicSubkeyPacket::str() const {
-  const std::string& key_fingerprint = fingerprint();
+  const ustring& key_fingerprint = fingerprint();
   char key_id[41]; // Flawfinder: ignore (fingerprints have known length)
   for(int i = 0; i < 20; i+=1) {
     snprintf(key_id+i*2, 3, "%02X",

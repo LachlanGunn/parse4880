@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 
+#include "parser_types.h"
 #include "packet.h"
 
 namespace parse4880 {
@@ -37,7 +38,7 @@ class VerificationContext {
    * @param data  Additional data to be verified.
    * @see Verify
    */
-  virtual void Update(const std::string& data) = 0;
+  virtual void Update(const ustring& data) = 0;
 
   /**
    * Provide data to be from a C string..

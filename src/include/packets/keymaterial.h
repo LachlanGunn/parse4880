@@ -7,6 +7,7 @@
  * Key-related packet classes.
  */
 
+#include "parser_types.h"
 #include "packet.h"
 
 namespace parse4880 {
@@ -43,7 +44,7 @@ class KeyMaterialPacket : public PGPPacket {
    *
    * @param content  The field to parse.
    */
-  KeyMaterialPacket(std::string content);
+  KeyMaterialPacket(ustring content);
 
  protected:
   /**
@@ -72,28 +73,28 @@ class PublicKeyPacket : public KeyMaterialPacket {
    *
    * @param contents  Packet data to be parsed.
    */
-  PublicKeyPacket(const std::string& contents);
+  PublicKeyPacket(const ustring& contents);
 
   virtual uint8_t tag() const;
-  virtual std::string str() const;
+  virtual std::string str() const override;
 
   /**
    * The fingerprint of the key.
    *
    * @return The fingerprint of the key, in binary format.
    */
-  const std::string& fingerprint() const;
+  const ustring& fingerprint() const;
 
   /**
    * The raw key material of the packet.
    *
    * @return A string containing the packet's raw key material.
    */
-  const std::string& key_material() const;
+  const ustring& key_material() const;
 
  private:
-  std::string key_material_;
-  std::string fingerprint_;
+  ustring key_material_;
+  ustring fingerprint_;
 };
 
 /**
@@ -107,10 +108,10 @@ class PublicSubkeyPacket : public PublicKeyPacket {
    *
    * @param contents  Packet data to be parsed.
    */
-  PublicSubkeyPacket(std::string contents);
+  PublicSubkeyPacket(ustring contents);
 
   virtual uint8_t tag() const;
-  virtual std::string str() const;
+  virtual std::string str() const override;
 };
 
 }

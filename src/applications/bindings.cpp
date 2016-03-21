@@ -25,7 +25,9 @@ std::string read_file(std::string filename) {
 }
                       
 std::list<std::shared_ptr<parse4880::PGPPacket>> parse_file(std::string file) {
-  return parse4880::parse(read_file(file));
+  std::string file_contents = read_file(file);
+  return parse4880::parse(parse4880::ustring(file_contents.begin(),
+                                             file_contents.end()));
 }
 
 template <class T, class U>

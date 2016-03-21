@@ -3,6 +3,7 @@
 
 #include "boost/format.hpp"
 
+#include "parser_types.h"
 #include "packet.h"
 #include "exceptions.h"
 #include "parser.h"
@@ -13,7 +14,7 @@ namespace parse4880 {
  * @todo Copy the creation time.
  * @todo Copy the quick-check field.
  */
-SignaturePacket::SignaturePacket(std::string packet_data)
+SignaturePacket::SignaturePacket(ustring packet_data)
     : PGPPacket(packet_data) {
   // We need to parse a signature subpacket.  This could be either
   // a v3 or v4 signature, so we need to check first and switch on that.
@@ -158,11 +159,11 @@ uint8_t SignaturePacket::hash_algorithm() const {
   return hash_algorithm_;
 }
 
-const std::string& SignaturePacket::hashed_subpacket_data() const {
+const ustring& SignaturePacket::hashed_subpacket_data() const {
   return hashed_subpacket_data_;
 }
 
-const std::string& SignaturePacket::unhashed_subpacket_data() const {
+const ustring& SignaturePacket::unhashed_subpacket_data() const {
   return unhashed_subpacket_data_;
 }
 
@@ -170,11 +171,11 @@ const uint8_t* SignaturePacket::hash_left_16bits() const {
   return hash_left_16bits_;
 }
 
-const std::string& SignaturePacket::signature() const {
+const ustring& SignaturePacket::signature() const {
   return signature_;
 }
 
-const std::string& SignaturePacket::key_id() const {
+const ustring& SignaturePacket::key_id() const {
   return key_id_;
 }
 
@@ -192,7 +193,7 @@ void SignaturePacket::SetSignaturePropertiesFromSubpackets() {
     }
 
     if (16 == subpacket->tag()) {
-      std::string subpacket_key_id = subpacket->contents();
+      ustring subpacket_key_id = subpacket->contents();
       if (8 != subpacket_key_id.length()) {
         throw invalid_packet_error(
             "Signature issuer subpacket has wrong length.");
@@ -202,7 +203,7 @@ void SignaturePacket::SetSignaturePropertiesFromSubpackets() {
   }
 }
 
-const std::string& SignaturePacket::hashed_data() const {
+const ustring& SignaturePacket::hashed_data() const {
   return hashed_data_;
 }
 

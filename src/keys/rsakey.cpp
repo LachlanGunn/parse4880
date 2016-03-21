@@ -6,6 +6,7 @@
 #include <mbedtls/md.h>
 #include <mbedtls/rsa.h>
 
+#include "parser_types.h"
 #include "parser.h"
 #include "constants.h"
 #include "exceptions.h"
@@ -42,7 +43,7 @@ class RSAVerificationContext : public VerificationContext {
   virtual ~RSAVerificationContext();
 
   virtual void Update(const uint8_t* data, std::size_t len);
-  virtual void Update(const std::string& data);
+  virtual void Update(const ustring& data);
   virtual bool Verify();
 
  private:
@@ -62,7 +63,7 @@ class RSAVerificationContext : public VerificationContext {
  * @param key_material    The public key to be parsed.
  * @param public_key_ctx  The public key context to be initialised.
  */
-void ReadRSAPublicKey(std::string key_material,
+void ReadRSAPublicKey(ustring key_material,
                       mbedtls_rsa_context* public_key) {
   /*
    * The public key format is simply two multiprecision integers.
@@ -81,7 +82,7 @@ void ReadRSAPublicKey(std::string key_material,
   }
 
   // First comes the modulus.  We extract and decode it.
-  const std::string modulus_encoded = key_material.substr(2, modulus_length);
+  const ustring modulus_encoded = key_material.substr(2, modulus_length);
   assert(modulus_encoded.length() == modulus_length);
   mbedtls_mpi_read_binary(
       &public_key->N,
@@ -99,7 +100,7 @@ void ReadRSAPublicKey(std::string key_material,
     throw parse4880::invalid_header_error(-1);
   }
 
-  const std::string exponent_encoded =
+  const ustring exponent_encoded =
       key_material.substr(4+modulus_length, exponent_length);
   assert(exponent_encoded.length() == exponent_length);
   mbedtls_mpi_read_binary(
@@ -136,8 +137,8 @@ void RSAVerificationContext<hash_id>::Update(const uint8_t* data,
 }
 
 template <mbedtls_md_type_t hash_id>
-void RSAVerificationContext<hash_id>::Update(const std::string& data) {
-  Update(reinterpret_cast<const uint8_t*>(data.c_str()), data.length());
+void RSAVerificationContext<hash_id>::Update(const ustring& data) {
+  Update(data.c_str(), data.length());
 }
 
 template <mbedtls_md_type_t hash_id>
@@ -156,11 +157,11 @@ bool RSAVerificationContext<hash_id>::Verify() {
   mbedtls_md_free(&hash_ctx_);
 
   // Extract the signature itself from the packet.
-  std::string signature = signature_.signature().substr(2);
+  ustring signature = signature_.signature().substr(2);
 
   // MbedTLS requires that the signature have the same length as
   // the key, so we pad it with zeros if it is less.
-  signature = std::string('\0', public_key_.len - signature.length())
+  signature = ustring('\0', public_key_.len - signature.length())
       + signature;
 
   int result = mbedtls_rsa_rsassa_pkcs1_v15_verify(
