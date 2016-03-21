@@ -20,7 +20,7 @@ enum PacketLengthType {
 };
 
 struct find_length_result {
-  int64_t          length;
+  uint64_t         length;
   int              length_field_length;
   PacketLengthType length_type;
 };
@@ -39,14 +39,12 @@ struct find_length_result find_length_new(const ustring& string_data,
                                           size_t field_position,
                                           bool allow_partial) {
   struct find_length_result result;
-  const unsigned char* data =
-      reinterpret_cast<const unsigned char*>(string_data.c_str());
 
   // Now we have to get the length.
   if (string_data.length() < 2) {
     throw invalid_header_error(field_position);
   }
-  result.length = (unsigned char)data[field_position];
+  result.length = (unsigned char)string_data[field_position];
   result.length_field_length = 1;
 
   // If the packet length is less than 192, then it is equal to the first
@@ -66,8 +64,8 @@ struct find_length_result find_length_new(const ustring& string_data,
     }
     // The two-octet length is defined in RFC4880§4.2.2.2
     result.length =
-        ( (data[field_position    ] - 192 ) << 8)
-        +  data[field_position + 1]
+        ( (string_data[field_position    ] - 192 ) << 8)
+        +  string_data[field_position + 1]
         + 192;
     result.length_field_length = 2;
   }
@@ -86,10 +84,10 @@ struct find_length_result find_length_new(const ustring& string_data,
     }
     // The five-octet length is defined in RFC4880§4.2.2.3
     result.length =
-          ((int64_t)data[field_position + 1] << 24)
-        + ((int64_t)data[field_position + 2] << 16)
-        + ((int64_t)data[field_position + 3] << 8)
-        +  (int64_t)data[field_position + 4];
+          ((uint64_t)string_data[field_position + 1] << 24)
+        + ((uint64_t)string_data[field_position + 2] << 16)
+        + ((uint64_t)string_data[field_position + 3] << 8)
+        +  (uint64_t)string_data[field_position + 4];
     result.length_field_length = 5;
   }
   
