@@ -32,10 +32,23 @@ namespace parse4880 {
  * @return A list of shared_ptr<PGPPacket>s to each of the packets
  *         in the provided data.
  *
- * @see PGPPacket
+ * @see parse4880::parse(ustring data, std::function callback)
+ * @see parse4880::PGPPacket
  * @see parse4880::parse_subpackets()
  */
 std::list<std::shared_ptr<PGPPacket>> parse(ustring data);
+
+/**
+ * Parse a series of PGP packets, calling a function for each packet
+ * found.
+ *
+ * @param data      The binary data to be parsed.
+ * @param callback  A callback to be called after each packet.
+ *
+ * @see parse4880::parse(ustring data)
+ */
+void parse(ustring data,
+           std::function<bool(std::shared_ptr<PGPPacket>)> callback);
 
 /**
  * Parse a series of signature subpackets.

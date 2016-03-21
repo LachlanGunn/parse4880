@@ -149,7 +149,7 @@ struct find_length_result find_length_old(const ustring& data,
   return result;
 }
 
-}
+} // namespace
 
 uint64_t ReadInteger(ustring encoded_integer) {
   uint64_t parsed_integer = 0;
@@ -181,9 +181,8 @@ TEST(ScalarNumbers, RoundTrip) {
 
 #endif
 
-std::list<std::shared_ptr<PGPPacket>> parse(ustring data) {
-  std::list<std::shared_ptr<PGPPacket>> parsed_packets;
-      
+void parse(ustring data,
+           std::function<bool(std::shared_ptr<PGPPacket>)> callback) {
   size_t packet_start_position = 0;
   while(true) {
     // Check that we have enough data left.  We need at one byte for the
@@ -250,13 +249,24 @@ std::list<std::shared_ptr<PGPPacket>> parse(ustring data) {
                                 data.length() - packet_start_position);
     }
     // Finally, we can create the packet.
-    parsed_packets.push_back(
+    if (!callback(
         PGPPacket::ParsePacket(packet_tag, data.substr(
-            packet_start_position + packet_length_length + 1, packet_length)));
+            packet_start_position + packet_length_length + 1, packet_length)))) {
+      packet_start_position += packet_length_with_overhead;
+      break;
+    }
 
     packet_start_position += packet_length_with_overhead;
   }
 
+}
+
+std::list<std::shared_ptr<PGPPacket>> parse(ustring data) {
+  std::list<std::shared_ptr<PGPPacket>> parsed_packets;
+  parse(data, [&parsed_packets](std::shared_ptr<PGPPacket> packet) -> bool {
+      parsed_packets.push_back(std::move(packet));
+      return true;
+    });
   return parsed_packets;
 }
 
