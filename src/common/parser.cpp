@@ -289,7 +289,7 @@ std::list<std::shared_ptr<PGPPacket>> parse_subpackets(ustring data) {
     // because the first octet of the packet is the subpacket tag.
     if (data.length() < packet_start_position + packet_length_with_overhead
         || packet_length_result.length == 0) {
-      throw packet_length_error(packet_start_position,
+      throw packet_length_error(-1,
                                 packet_length_with_overhead,
                                 data.length() - packet_start_position); 
     }
