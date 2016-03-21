@@ -19,7 +19,7 @@ SignaturePacket::SignaturePacket(ustring packet_data)
   // We need to parse a signature subpacket.  This could be either
   // a v3 or v4 signature, so we need to check first and switch on that.
   if (packet_data.length() < 1) {
-    throw invalid_header_error(-1);
+    throw invalid_packet_error("Empty signature packet");
   }
   version_ = packet_data.at(0);
   if (version_ == 3) {
@@ -37,13 +37,14 @@ SignaturePacket::SignaturePacket(ustring packet_data)
     //
     // This adds up to nineteen bytes plus the signature.
     if (packet_data.length() < 19) {
-      throw invalid_header_error(-1);
+      throw invalid_packet_error("Signature packet too short");
     }
 
     // There should always be five bytes of hashed material, so check
     // that the provided length is correct.
     if (5 != packet_data.at(1)) {
-      throw invalid_header_error(-1);
+      throw invalid_packet_error("Wrong amount of hashed material for "
+                                 "v3 packet");
     }
 
     // We already know that the remainder of the data is there, so
@@ -84,7 +85,7 @@ SignaturePacket::SignaturePacket(ustring packet_data)
     //   [?] Signature
 
     if (packet_data.length() < 10) {
-      throw invalid_header_error(0);
+      throw invalid_packet_error("v4 packet too short");
     }
 
     signature_type_       = packet_data.at(1);
@@ -93,7 +94,7 @@ SignaturePacket::SignaturePacket(ustring packet_data)
 
     size_t hashed_data_count = ReadInteger(packet_data.substr(4,2));
     if (packet_data.length() < 10+hashed_data_count) {
-      throw invalid_header_error(1);
+      throw invalid_packet_error("v4 packet too short for hashed subpackets");
     }
     hashed_subpacket_data_ = packet_data.substr(6, hashed_data_count);
     subpackets_ = parse_subpackets(hashed_subpacket_data_);
@@ -104,7 +105,7 @@ SignaturePacket::SignaturePacket(ustring packet_data)
         ReadInteger(packet_data.substr(6+hashed_data_count, 2));
 
     if (packet_data.length() < 10+hashed_data_count+unhashed_data_count) {
-      throw invalid_header_error(2);
+      throw invalid_packet_error("v4 packet too short for unhashed subpackets");
     }
     unhashed_subpacket_data_ =
         packet_data.substr(6+hashed_data_count+2, unhashed_data_count);

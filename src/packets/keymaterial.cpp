@@ -41,7 +41,7 @@ PublicKeyPacket::PublicKeyPacket(const ustring& data)
    *   [?] Key material
    */
   if (data.length() < 1) {
-    throw invalid_header_error(-1);
+    throw invalid_packet_error("Empty public-key packet");
   }
 
   version_ = data[0];
@@ -50,7 +50,7 @@ PublicKeyPacket::PublicKeyPacket(const ustring& data)
   }
 
   if (data.length() < 6) {
-    throw invalid_header_error(-1);
+    throw invalid_packet_error("v4 public key packet too short");
   }
 
   creation_time_ = ReadInteger(data.substr(1,4));
@@ -71,10 +71,8 @@ PublicKeyPacket::PublicKeyPacket(const ustring& data)
   mbedtls_md_starts(&md_ctx);
 
   mbedtls_md_update(&md_ctx, reinterpret_cast<const unsigned char*>("\x99"), 1);
-  mbedtls_md_update(&md_ctx, reinterpret_cast<const unsigned char*>(
-      WriteInteger(data.length(),2).c_str()), 2);
-  mbedtls_md_update(&md_ctx, reinterpret_cast<const unsigned char*>(data.c_str()),
-              data.length());
+  mbedtls_md_update(&md_ctx, WriteInteger(data.length(),2).c_str()), 2);
+  mbedtls_md_update(&md_ctx, data.c_str(), data.length());
 
   size_t digest_length = mbedtls_md_get_size(md_type);
   std::unique_ptr<uint8_t[]> digest(new uint8_t[digest_length]);
