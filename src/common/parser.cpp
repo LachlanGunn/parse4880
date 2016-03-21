@@ -5,6 +5,10 @@
 #include <memory>
 #include <stdexcept>
 
+#ifdef INCLUDE_TESTS
+#include <gtest/gtest.h>
+#endif
+
 #include "parser_types.h"
 #include "parser.h"
 #include "exceptions.h"
@@ -41,7 +45,7 @@ struct find_length_result find_length_new(const ustring& string_data,
   struct find_length_result result;
 
   // Now we have to get the length.
-  if (string_data.length() < 2) {
+  if (string_data.length() == 0) {
     throw invalid_header_error(field_position);
   }
   result.length = (unsigned char)string_data[field_position];
@@ -93,6 +97,23 @@ struct find_length_result find_length_new(const ustring& string_data,
   
   return result;
 }
+
+#ifdef INCLUDE_TESTS
+
+TEST(PacketLengths, NewFormat) {
+  struct find_length_result length;
+  length = find_length_new(ustring((uint8_t*)"\x64",1),0,true);
+  ASSERT_EQ(length.length, 100);
+
+  length = find_length_new(ustring((uint8_t*)"\xC5\xFB",2),0,true);
+  ASSERT_EQ(length.length, 1723);
+
+  length = find_length_new(ustring((uint8_t*)"\xFF\x00\x01\x86\xA0",5),0,true);
+  ASSERT_EQ(length.length, 100000);
+}
+
+#endif  // INCLUDE_TESTS
+
 
 /**
  * Find the length of a old-style packet chunk.
@@ -147,6 +168,18 @@ ustring WriteInteger(uint64_t value, uint8_t length) {
   }
   return result;
 }
+
+#ifdef INCLUDE_TESTS
+
+TEST(ScalarNumbers, RoundTrip) {
+  for (int length = 1; length < 3; length++) {
+    for (uint64_t i = 0; i < (1<<(length*8))-1; i++) {
+      ASSERT_EQ(i, parse4880::ReadInteger(parse4880::WriteInteger(i, length)));
+    }
+  }
+}
+
+#endif
 
 std::list<std::shared_ptr<PGPPacket>> parse(ustring data) {
   std::list<std::shared_ptr<PGPPacket>> parsed_packets;
