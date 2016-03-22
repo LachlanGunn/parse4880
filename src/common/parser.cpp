@@ -41,12 +41,13 @@ struct find_length_result {
  */
 struct find_length_result find_length_new(const ustring& string_data,
                                           size_t field_position,
-                                          bool allow_partial) {
+                                          bool allow_partial,
+                                          size_t packet_start_position) {
   struct find_length_result result;
 
   // Now we have to get the length.
-  if (string_data.length() == 0) {
-    throw invalid_header_error(field_position);
+  if (string_data.length() < field_position + 1) {
+    throw packet_header_length_error(packet_start_position);
   }
   result.length = (unsigned char)string_data[field_position];
   result.length_field_length = 1;
@@ -64,7 +65,7 @@ struct find_length_result find_length_new(const ustring& string_data,
              (!allow_partial && result.length < 255)) ) {
     // Check that the buffer is large enough
     if (string_data.length() <= field_position + 1) {
-      throw invalid_header_error(field_position);
+      throw packet_header_length_error(packet_start_position);
     }
     // The two-octet length is defined in RFC4880§4.2.2.2
     result.length =
@@ -84,7 +85,7 @@ struct find_length_result find_length_new(const ustring& string_data,
   else {
     // Check that the buffer is large enough
     if (string_data.length() < field_position + 5) {
-      throw invalid_header_error(field_position);
+      throw invalid_header_error(packet_start_position);
     }
     // The five-octet length is defined in RFC4880§4.2.2.3
     result.length =
@@ -102,13 +103,13 @@ struct find_length_result find_length_new(const ustring& string_data,
 
 TEST(PacketLengths, NewFormat) {
   struct find_length_result length;
-  length = find_length_new(ustring((uint8_t*)"\x64",1),0,true);
+  length = find_length_new(ustring((uint8_t*)"\x64",1),0,true,0);
   ASSERT_EQ(length.length, 100);
 
-  length = find_length_new(ustring((uint8_t*)"\xC5\xFB",2),0,true);
+  length = find_length_new(ustring((uint8_t*)"\xC5\xFB",2),0,true,0);
   ASSERT_EQ(length.length, 1723);
 
-  length = find_length_new(ustring((uint8_t*)"\xFF\x00\x01\x86\xA0",5),0,true);
+  length = find_length_new(ustring((uint8_t*)"\xFF\x00\x01\x86\xA0",5),0,true,0);
   ASSERT_EQ(length.length, 100000);
 }
 
@@ -128,7 +129,8 @@ TEST(PacketLengths, NewFormat) {
  */
 struct find_length_result find_length_old(const ustring& data,
                                           size_t field_position,
-                                          int length_type) {
+                                          int length_type,
+                                          size_t packet_start_position) {
   struct find_length_result result;
 
   if (length_type == 3) {
@@ -139,7 +141,7 @@ struct find_length_result find_length_old(const ustring& data,
     result.length_field_length = 1 << length_type ;
     // Check that the buffer is large enough
     if (data.length() <= field_position + result.length_field_length) {
-      throw invalid_header_error(field_position);
+      throw invalid_header_error(packet_start_position);
     }
 
     result.length = ReadInteger(data.substr(field_position,
@@ -187,8 +189,12 @@ void parse(ustring data,
   while(true) {
     // Check that we have enough data left.  We need at one byte for the
     // header and at least one byte for the length field.
-    if(data.length() <= packet_start_position + 1) {
+    if (data.length() < packet_start_position + 1) {
       break;
+    }
+
+    if (data.length() < packet_start_position + 2) {
+      throw packet_header_length_error(packet_start_position);
     }
 
     // Check whether we have a valid new-style packet header.
@@ -219,7 +225,8 @@ void parse(ustring data,
       uint8_t length_type = header & 0x03;
 
       struct find_length_result length
-          = find_length_old(data, packet_start_position+1, length_type);
+          = find_length_old(data, packet_start_position+1, length_type,
+                            packet_start_position);
 
       packet_length = length.length;
       packet_length_length = length.length_field_length;
@@ -230,7 +237,8 @@ void parse(ustring data,
 
       // Next, we get the length.
       struct find_length_result length
-          = find_length_new(data, packet_start_position+1, true);
+          = find_length_new(data, packet_start_position+1, true,
+                            packet_start_position);
 
       packet_length = length.length;
       packet_length_length = length.length_field_length;
@@ -276,7 +284,7 @@ std::list<std::shared_ptr<PGPPacket>> parse_subpackets(ustring data) {
     // First we need to extract the packet length.  This is a new-style
     // length, so it has a variable length itself.
     struct find_length_result packet_length_result =
-        find_length_new(data, packet_start_position, false);
+        find_length_new(data, packet_start_position, false, -1);
 
     // Now that we have decoded the length field, we can find the
     // full size of the packet plus header.

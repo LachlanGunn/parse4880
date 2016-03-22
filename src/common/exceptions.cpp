@@ -24,6 +24,9 @@ std::size_t format_error::position() {
 invalid_header_error::invalid_header_error(std::size_t position)
     : format_error(position, "invalid packet header") {}
 
+packet_header_length_error::packet_header_length_error(std::size_t position)
+    : format_error(position, "packet header too short") {}
+
 packet_length_error::packet_length_error(std::size_t position,
                                          std::size_t claimed_length,
                                          std::size_t actual_length)

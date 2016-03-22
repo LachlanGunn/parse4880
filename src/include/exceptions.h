@@ -83,6 +83,24 @@ class invalid_header_error : public format_error {
 };
 
 /**
+ * A packet header that appears to have been cut off.
+ */
+class packet_header_length_error : public format_error {
+public:
+  /**
+   * Constructor.
+   *
+   * @param position  The position at which the error occurred.
+   */
+  packet_header_length_error(std::size_t position);
+
+  /**
+   * Default destructor.
+   */
+  ~packet_header_length_error() noexcept = default;
+};
+
+/**
  * Errors in which the packet is shorter than demanded by its
  * length fields.
  */
