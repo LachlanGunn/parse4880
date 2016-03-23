@@ -175,7 +175,7 @@ ustring WriteInteger(uint64_t value, uint8_t length) {
 
 TEST(ScalarNumbers, RoundTrip) {
   for (int length = 1; length < 3; length++) {
-    for (uint64_t i = 0; i < (1<<(length*8))-1; i++) {
+    for (uint64_t i = 0; i < (uint64_t{1}<<(length*8))-1; i++) {
       ASSERT_EQ(i, parse4880::ReadInteger(parse4880::WriteInteger(i, length)));
     }
   }
