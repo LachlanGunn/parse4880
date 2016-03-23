@@ -75,7 +75,7 @@ class PublicKeyPacket : public KeyMaterialPacket {
    */
   PublicKeyPacket(const ustring& contents);
 
-  virtual uint8_t tag() const;
+  virtual uint8_t tag() const override;
   virtual std::string str() const override;
 
   /**
@@ -110,7 +110,7 @@ class PublicSubkeyPacket : public PublicKeyPacket {
    */
   PublicSubkeyPacket(ustring contents);
 
-  virtual uint8_t tag() const;
+  virtual uint8_t tag() const override;
   virtual std::string str() const override;
 };
 
