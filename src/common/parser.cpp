@@ -85,7 +85,7 @@ struct find_length_result find_length_new(const ustring& string_data,
   else {
     // Check that the buffer is large enough
     if (string_data.length() < field_position + 5) {
-      throw invalid_header_error(packet_start_position);
+      throw packet_header_length_error(packet_start_position);
     }
     // The five-octet length is defined in RFC4880§4.2.2.3
     result.length =
@@ -141,7 +141,7 @@ struct find_length_result find_length_old(const ustring& data,
     result.length_field_length = 1 << length_type ;
     // Check that the buffer is large enough
     if (data.length() <= field_position + result.length_field_length) {
-      throw invalid_header_error(packet_start_position);
+      throw packet_header_length_error(packet_start_position);
     }
 
     result.length = ReadInteger(data.substr(field_position,
