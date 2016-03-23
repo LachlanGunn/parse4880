@@ -1,12 +1,12 @@
-sudo: required	
-dist: trusty
+sudo: false	
+#dist: trusty
 
 addons:
   apt:
     packages:
     - libboost-dev
     - libmbedtls-dev
-    - libmbedcrypto0
+          - libmbedcrypto0
 
 language: cpp
 compiler:
