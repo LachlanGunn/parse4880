@@ -1,3 +1,6 @@
+#include <exception>
+
+#include "exceptions.h"
 #include "keys/key.h"
 #include "keys/rsakey.h"
 #include "constants.h"
@@ -17,14 +20,20 @@ Key::~Key() {
 }
 
 std::unique_ptr<Key> Key::ParseKey(const PublicKeyPacket& packet) {
+  std::unique_ptr<Key> parsed_key;
   switch (packet.public_key_algorithm()) {
     case kPublicKeyRSAEncryptOrSign:
     case kPublicKeyRSAEncryptOnly:
     case kPublicKeyRSASignOnly:
-      return std::unique_ptr<Key>(new RSAKey(packet));
+      parsed_key.reset(new RSAKey(packet));
+      if (nullptr == parsed_key) {
+        // FIXME: This should be a custom type.
+        throw std::runtime_error("Parsing failed.");
+      }
+      return parsed_key;
       break;
     default:
-      return nullptr;
+      throw invalid_packet_error("Unsupported key type.");
   }
 }
 

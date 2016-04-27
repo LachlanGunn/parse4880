@@ -13,7 +13,19 @@ namespace parse4880 {
 
 namespace {
 
-void UpdateContextWithKey(VerificationContext& ctx, const PublicKeyPacket& key) {
+/**
+ * Hash a public key into a verification context.
+ *
+ * When we perform a subkey verification, we need to include
+ * more than just the keys themselves, but also a header
+ * "\x99<LENGTH>" that allows concatenated keys to be
+ * unambiguously separated.
+ *
+ * @param ctx  The verification context into which to inser the key.
+ * @param key  The public key packet to be verified.
+ */
+void UpdateContextWithKey(VerificationContext& ctx,
+                          const PublicKeyPacket& key) {
   ctx.Update((uint8_t*)"\x99");
   ctx.Update(WriteInteger(key.contents().length(), 2));
   ctx.Update(key.contents());
@@ -30,6 +42,9 @@ int verify_subkey_binding(const PublicKeyPacket&    key_packet,
   // Next, we validate the top-level signature.
   std::unique_ptr<VerificationContext> ctx =
       key->GetVerificationContext(signature);
+  if (ctx == nullptr) {
+    return 0;
+  }
 
   UpdateContextWithKey(*ctx, key_packet);
   UpdateContextWithKey(*ctx, subkey_packet);
@@ -38,7 +53,10 @@ int verify_subkey_binding(const PublicKeyPacket&    key_packet,
 
   // The first signature having been validated, we need to check for and
   // validate the second binding signature.
-  const std::list<std::shared_ptr<PGPPacket>>& subpackets = signature.subpackets();
+
+  // First, find a subpacket with the right tag.
+  const std::list<std::shared_ptr<PGPPacket>>& subpackets
+      = signature.subpackets();
   auto subsignature_iterator =
       std::find_if(subpackets.begin(), subpackets.end(),
                    [](const std::shared_ptr<PGPPacket>& x) -> bool {
@@ -47,10 +65,15 @@ int verify_subkey_binding(const PublicKeyPacket&    key_packet,
 
   if (subsignature_iterator != subpackets.end()) {
     try {
+      // Next, we parse the subkey and signature subpacket.
       std::unique_ptr<Key> subkey = Key::ParseKey(subkey_packet);
       SignaturePacket subsignature_packet((**subsignature_iterator).contents());
+      // Finally, we can verify the signature.
       std::unique_ptr<VerificationContext> ctx_subsignature =
           subkey->GetVerificationContext(subsignature_packet);
+      if (ctx_subsignature == nullptr) {
+        return 0;
+      }
       UpdateContextWithKey(*ctx_subsignature, key_packet);
       UpdateContextWithKey(*ctx_subsignature, subkey_packet);
 

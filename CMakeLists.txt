@@ -9,10 +9,10 @@ IF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     SET(GCC_CXX_STD "c++0x")
   ENDIF()
   SET(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -std=${GCC_CXX_STD} -Wall -Werror -Wextra -pedantic -g -Wno-sign-compare -Wno-unused-parameter")
+    "${CMAKE_CXX_FLAGS} -std=${GCC_CXX_STD} -Wall -Werror -Wextra -pedantic -g -Wno-sign-compare -Wno-unused-parameter -Wno-missing-field-initializers")
 ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   SET(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Werror -ftemplate-depth=1024 -Wunreachable-code -Wimplicit-fallthrough -g")
+    "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Werror -ftemplate-depth=1024 -Wunreachable-code -Wimplicit-fallthrough -Wno-missing-field-initializers -g")
 ENDIF()
 
 # Boost
